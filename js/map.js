@@ -2,7 +2,9 @@
 (function (M) {
   'use strict';
   var model = null, geo = null;
-  var mapEl, svg, world, dotLayer, photogLayer, selLayer, topLayer;
+  var mapEl, svg, world, dotLayer, photogLayer, selLayer, topLayer, labelLayer;
+  var provLabels = [], spotLabels = [], photogLabels = [];
+  var dragOn = false, dragMoved = false, dragStart = null;
   var W = 0, H = 0, baseP = null;
   var CHINA_BOUNDS = null;
   var view = { k: 1, tx: 0, ty: 0 };
@@ -62,7 +64,7 @@
     var rr = Math.max(2.0, 3.4 / view.k);
     var rs = Math.max(4.2, 5.6 / view.k);
     var hr = Math.max(4, 9 / view.k);
-    var dim = view.k > 1.15;
+    var dim = view.k > 1.15 && !!curProv;
     var filter = M.state.catFilter;
     dotLayer.querySelectorAll('g.spotg').forEach(function (g) {
       var cat = g.getAttribute('data-cat');
@@ -94,6 +96,17 @@
       photogLayer.setAttribute('opacity', dim ? 0.35 : 1);
       var pr = Math.max(1, 1 / view.k);
       photogLayer.querySelectorAll('.pt-dot').forEach(function (c) { c.setAttribute('r', (1.6 * pr).toFixed(2)); });
+    }
+    if (labelLayer) {
+      var fs;
+      var op1 = Math.max(0, Math.min(1, (view.k - 2.2) / 0.8));
+      fs = (13 / view.k).toFixed(2);
+      provLabels.forEach(function (t) { t.setAttribute('font-size', fs); t.setAttribute('stroke-width', (3 / view.k).toFixed(2)); t.style.opacity = op1; });
+      var op2 = Math.max(0, Math.min(1, (view.k - 4.2) / 1.2));
+      fs = (11 / view.k).toFixed(2);
+      spotLabels.forEach(function (t) { t.setAttribute('font-size', fs); t.setAttribute('stroke-width', (2.6 / view.k).toFixed(2)); t.style.opacity = op2; });
+      var op3 = Math.max(0, Math.min(1, (view.k - 3.4) / 1.0));
+      photogLabels.forEach(function (t) { t.setAttribute('font-size', fs); t.setAttribute('stroke-width', (2.6 / view.k).toFixed(2)); t.style.opacity = op3; });
     }
   }
   function stopAnim() { if (animId) { cancelAnimationFrame(animId); animId = null; } }
@@ -141,6 +154,69 @@
     requestAnimationFrame(frame);
   }
 
+  function featureCenter(f) {
+    var b = geo.boundsOf([f]);
+    return baseP((b[0][0] + b[1][0]) / 2, (b[0][1] + b[1][1]) / 2);
+  }
+
+  /* ---------- 自由导航：滚轮缩放 / 拖拽平移 ---------- */
+  function svgPoint(e) {
+    var r = svg.getBoundingClientRect();
+    return [e.clientX - r.left, e.clientY - r.top];
+  }
+  function zoomAt(mx, my, factor) {
+    stopAnim();
+    var k2 = Math.min(36, Math.max(1, view.k * factor));
+    if (k2 === 1) { view = { k: 1, tx: 0, ty: 0 }; }
+    else {
+      var wx = (mx - view.tx) / view.k, wy = (my - view.ty) / view.k;
+      view = { k: k2, tx: mx - wx * k2, ty: my - wy * k2 };
+    }
+    if (view.k <= 1.001) { view = { k: 1, tx: 0, ty: 0 }; curProv = null; drawSelStroke(); }
+    applyView();
+    updateBackBtn();
+  }
+  function freeNav() {
+    if (curProv) { curProv = null; drawSelStroke(); }
+    updateBackBtn();
+  }
+  function updateBackBtn() {
+    var btn = document.getElementById('zoomBack');
+    if (btn) btn.classList.toggle('show', view.k > 1.05);
+  }
+  function bindNav() {
+    svg.addEventListener('wheel', function (e) {
+      e.preventDefault();
+      var pt = svgPoint(e);
+      zoomAt(pt[0], pt[1], Math.pow(1.0016, -e.deltaY));
+    }, { passive: false });
+    svg.addEventListener('pointerdown', function (e) {
+      dragOn = true; dragMoved = false;
+      dragStart = { x: e.clientX, y: e.clientY, tx: view.tx, ty: view.ty };
+    });
+    svg.addEventListener('pointermove', function (e) {
+      if (!dragOn) return;
+      var dx = e.clientX - dragStart.x, dy = e.clientY - dragStart.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) {
+        dragMoved = true;
+        view.tx = dragStart.tx + dx;
+        view.ty = dragStart.ty + dy;
+        applyView();
+      }
+    });
+    function endDrag() {
+      if (!dragOn) return;
+      dragOn = false;
+      if (dragMoved) freeNav();
+      setTimeout(function () { dragMoved = false; }, 60);
+    }
+    svg.addEventListener('pointerup', endDrag);
+    svg.addEventListener('pointerleave', endDrag);
+    svg.addEventListener('click', function (e) {
+      if (dragMoved) { e.stopPropagation(); }
+    }, true);
+  }
+
   /* ---------- 绘制 ---------- */
   function drawBase() {
     var rect = mapEl.getBoundingClientRect();
@@ -180,9 +256,45 @@
 
     var t = curProv ? targetViewFor(curProv) : { k: 1, tx: 0, ty: 0 };
     view = { k: t.k, tx: t.tx, ty: t.ty };
+    buildLabels();
     applyView();
     drawSelStroke();
     drawLegend();
+    updateBackBtn();
+    bindNav();
+  }
+
+  function buildLabels() {
+    provLabels = []; spotLabels = []; photogLabels = [];
+    labelLayer = el('g', { id: 'labels', 'pointer-events': 'none' }, world);
+    model.china.features.forEach(function (f) {
+      var c = featureCenter(f);
+      var t = el('text', {
+        x: c[0].toFixed(1), y: c[1].toFixed(1), 'text-anchor': 'middle',
+        'class': 'm-label prov-label', fill: '#3d4a63'
+      }, labelLayer);
+      t.textContent = f.properties.name;
+      provLabels.push(t);
+    });
+    model.spots.forEach(function (s) {
+      var xy = baseP(s[3], s[4]);
+      var meta = model.CATC[s[5]] || model.CATC.N;
+      var t = el('text', {
+        x: (xy[0] + 6).toFixed(1), y: (xy[1] + 3.5).toFixed(1),
+        'class': 'm-label spot-label', fill: meta.color
+      }, labelLayer);
+      t.textContent = s[0];
+      spotLabels.push(t);
+    });
+    model.photog.forEach(function (x) {
+      var xy = baseP(x.lon, x.lat);
+      var t = el('text', {
+        x: (xy[0] + 8).toFixed(1), y: (xy[1] + 4).toFixed(1),
+        'class': 'm-label photog-label', fill: '#5b48c8'
+      }, labelLayer);
+      t.textContent = '◎ ' + x.n + ' ' + x.cnt;
+      photogLabels.push(t);
+    });
   }
 
   function drawSpot(s) {
@@ -314,6 +426,15 @@
     },
     applyFilter: applyView,
     redrawLegend: drawLegend,
+    currentK: function () { return view.k; },
+    zoomStep: function (factor) { zoomAt(W / 2, H / 2, factor); },
+    resetView: function () {
+      stopAnim();
+      curProv = null;
+      animateTo({ k: 1, tx: 0, ty: 0 });
+      drawSelStroke();
+      updateBackBtn();
+    },
     pulse: pulseAt,
     get currentProv() { return curProv; }
   };

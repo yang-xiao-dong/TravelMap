@@ -15,6 +15,11 @@
 
     /* 点击红点：选中所在省并脉冲定位 + 信息卡 */
     onSpotClick: function (s) {
+      if (M.map.currentK() > 2.2) {
+        M.map.pulse(s[3], s[4]);
+        M.interact.showPopup(s);
+        return;
+      }
       var prov = s[1] === '兵团' ? '新疆' : s[1];
       M.state.selected = prov;
       M.app.syncView();
@@ -40,6 +45,14 @@
     },
 
     /* 依据状态同步地图视口、返回按钮与面板 */
+    resetAll: function () {
+      M.state.selected = null;
+      document.getElementById('zoomBack').classList.remove('show');
+      M.map.resetView();
+      M.interact.hidePopup();
+      M.panel.render();
+    },
+
     syncView: function () {
       var sel = M.state.selected;
       document.getElementById('zoomBack').classList.toggle('show', !!sel);
@@ -76,13 +89,15 @@
         M.map.redrawLegend();
       });
       document.getElementById('zoomBack').addEventListener('click', function () {
-        if (M.state.selected) M.app.onProvClick(M.state.selected);
+        M.app.resetAll();
       });
+      document.getElementById('zoomIn').addEventListener('click', function () { M.map.zoomStep(1.45); });
+      document.getElementById('zoomOut').addEventListener('click', function () { M.map.zoomStep(1 / 1.45); });
       document.addEventListener('keydown', function (e) {
         if (e.key !== 'Escape') return;
         var qEl = document.getElementById('q');
         if (qEl.value) { qEl.value = ''; M.state.q = ''; M.panel.render(); return; }
-        if (M.state.selected) M.app.onProvClick(M.state.selected);
+        M.app.resetAll();
       });
       if (window.ResizeObserver) {
         new ResizeObserver(function () { M.map.redraw(); }).observe(document.getElementById('c5a-map'));

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>全国 5A 级旅游景区分布 · 358 家</title>
-<link rel="stylesheet" href="css/style.css?v=8">
+<link rel="stylesheet" href="css/style.css?v=10">
 </head>
 <body>
 <div class="wrap">
@@ -24,9 +24,13 @@
   <div class="main">
     <div class="map-card">
       <div id="c5a-map"></div>
-      <span class="map-hint">点击省份放大 · 点击彩点看详情</span>
+      <span class="map-hint">滚轮缩放 · 拖拽平移 · 点击省份聚焦 · ESC 复位</span>
       <button type="button" class="zoom-badge" id="zoomBack">⟵ 返回全国</button>
       <div class="legend" id="legend"></div>
+      <div class="zoombtns">
+        <button type="button" id="zoomIn" aria-label="放大">＋</button>
+        <button type="button" id="zoomOut" aria-label="缩小">－</button>
+      </div>
       <button type="button" class="filter-note" id="filterNote" hidden></button>
       <div class="info-pop" id="infoPop">
         <button type="button" class="close" id="ipClose" aria-label="关闭">✕</button>
@@ -65,14 +69,14 @@
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="js/data-china.js?v=8"></script>
-<script src="js/data-spots.js?v=8"></script>
-<script src="js/data-photog.js?v=8"></script>
-<script src="js/geo.js?v=8"></script>
-<script src="js/model.js?v=8"></script>
-<script src="js/map.js?v=8"></script>
-<script src="js/panel.js?v=8"></script>
-<script src="js/interact.js?v=8"></script>
-<script src="js/app.js?v=8"></script>
+<script src="js/data-china.js?v=10"></script>
+<script src="js/data-spots.js?v=10"></script>
+<script src="js/data-photog.js?v=10"></script>
+<script src="js/geo.js?v=10"></script>
+<script src="js/model.js?v=10"></script>
+<script src="js/map.js?v=10"></script>
+<script src="js/panel.js?v=10"></script>
+<script src="js/interact.js?v=10"></script>
+<script src="js/app.js?v=10"></script>
 </body>
 </html>

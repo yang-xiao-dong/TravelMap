@@ -73,6 +73,15 @@ header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px;margin-bottom:1
 .filter-note.on-n{border-color:rgba(31,157,85,.5);background:rgba(243,250,245,.92);color:#157a43}
 .filter-note.on-n:hover{background:#fff;border-color:var(--nat)}
 .legend .it.dim{opacity:.3}
+#c5a-map svg{cursor:grab}
+.zoombtns{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:6px}
+.zoombtns button{
+  width:32px;height:32px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.92);
+  color:var(--ink-2);font-size:16px;line-height:1;cursor:pointer;box-shadow:var(--shadow-sm);font-family:inherit;
+}
+.zoombtns button:hover{border-color:var(--accent);color:var(--accent)}
+.m-label{font-family:inherit;pointer-events:none;paint-order:stroke;stroke:#ffffff;opacity:0;transition:opacity .15s;font-weight:500}
+.prov-label{font-weight:600;letter-spacing:2px}
 .pchip{border-color:rgba(109,90,224,.4)}
 .pchip[aria-pressed="true"]{background:#4c3ad1;border-color:#4c3ad1}
 .pring{width:9px;height:9px;border:2px solid #6d5ae0;border-radius:50%;display:inline-block;box-sizing:border-box}
