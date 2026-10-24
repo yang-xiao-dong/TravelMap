@@ -16,12 +16,12 @@ def build(out_path):
     html = io.open(INDEX, encoding='utf-8').read()
     # 内联样式表
     def css_repl(m):
-        p = os.path.join(ROOT, m.group(1))
+        p = os.path.join(ROOT, m.group(1).split('?')[0])
         return '<style>\n' + io.open(p, encoding='utf-8').read() + '\n</style>'
     html = re.sub(r'<link rel="stylesheet" href="([^"]+)">', css_repl, html)
     # 内联脚本（保持原顺序）
     def js_repl(m):
-        p = os.path.join(ROOT, m.group(1))
+        p = os.path.join(ROOT, m.group(1).split('?')[0])
         return '<script>\n' + io.open(p, encoding='utf-8').read() + '\n</script>'
     html = re.sub(r'<script src="([^"]+)"></script>', js_repl, html)
     io.open(out_path, 'w', encoding='utf-8', newline='\n').write(html)

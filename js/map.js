@@ -59,8 +59,8 @@
   }
   function applyView() {
     world.setAttribute('transform', 'translate(' + view.tx.toFixed(2) + ',' + view.ty.toFixed(2) + ') scale(' + view.k.toFixed(4) + ')');
-    var rr = Math.max(1.8, 3.2 / view.k);
-    var rs = Math.max(3.8, 5.4 / view.k);
+    var rr = Math.max(2.0, 3.4 / view.k);
+    var rs = Math.max(4.2, 5.6 / view.k);
     var hr = Math.max(4, 9 / view.k);
     var dim = view.k > 1.15;
     var filter = M.state.catFilter;
@@ -68,15 +68,22 @@
       var cat = g.getAttribute('data-cat');
       if (filter !== 'all' && cat !== filter) { g.style.display = 'none'; return; }
       g.style.display = '';
-      var vis = g.querySelector('.vis'), hit = g.querySelector('.hit');
+      var vis = g.querySelector('.vis'), halo = g.querySelector('.halo'), hit = g.querySelector('.hit');
       hit.setAttribute('r', hr);
-      if (vis.tagName === 'circle') vis.setAttribute('r', rr);
-      else {
-        var cx = +vis.getAttribute('data-cx'), cy = +vis.getAttribute('data-cy');
+      var cx = +vis.getAttribute('data-cx'), cy = +vis.getAttribute('data-cy');
+      if (vis.tagName === 'circle') {
+        vis.setAttribute('r', rr);
+        halo.setAttribute('r', (rr + 1.2).toFixed(2));
+      } else {
         vis.setAttribute('x', (cx - rs / 2).toFixed(1));
         vis.setAttribute('y', (cy - rs / 2).toFixed(1));
         vis.setAttribute('width', rs.toFixed(1));
         vis.setAttribute('height', rs.toFixed(1));
+        var hs = rs + 2.4;
+        halo.setAttribute('x', (cx - hs / 2).toFixed(1));
+        halo.setAttribute('y', (cy - hs / 2).toFixed(1));
+        halo.setAttribute('width', hs.toFixed(1));
+        halo.setAttribute('height', hs.toFixed(1));
       }
       var p = g.getAttribute('data-prov');
       var inProv = !dim || p === curProv || (p === '兵团' && curProv === '新疆');
@@ -176,16 +183,23 @@
     var cat = s[5], meta = model.CATC[cat] || model.CATC.N;
     var g = el('g', { 'data-prov': s[1], 'data-cat': cat, 'class': 'spotg' }, dotLayer);
     var shapeG = el('g', { 'class': 'shape' }, g);
+    /* 白色光晕底衬：保证点在任何省份填色上都醒目 */
+    var halo = {
+      'class': 'halo', 'data-cx': cx, 'data-cy': cy,
+      fill: '#ffffff', 'fill-opacity': .88, 'pointer-events': 'none'
+    };
     var common = {
       'class': 'vis', 'data-cx': cx, 'data-cy': cy,
-      fill: meta.color, 'fill-opacity': .92,
-      stroke: '#fff', 'stroke-width': 0.8, 'stroke-opacity': .95, 'vector-effect': 'non-scaling-stroke',
+      fill: meta.color, 'fill-opacity': .95,
+      stroke: '#ffffff', 'stroke-width': 1, 'vector-effect': 'non-scaling-stroke',
       'pointer-events': 'none'
     };
     if (cat === 'C') {
-      el('rect', mixin({ x: cx - 2.7, y: cy - 2.7, width: 5.4, height: 5.4, transform: 'rotate(45 ' + cx + ' ' + cy + ')' }, common), shapeG);
+      el('rect', mixin({ x: cx - 4.2, y: cy - 4.2, width: 8.4, height: 8.4, transform: 'rotate(45 ' + cx + ' ' + cy + ')' }, halo), shapeG);
+      el('rect', mixin({ x: cx - 2.8, y: cy - 2.8, width: 5.6, height: 5.6, transform: 'rotate(45 ' + cx + ' ' + cy + ')' }, common), shapeG);
     } else {
-      el('circle', mixin({ r: 3.2 }, common), shapeG);
+      el('circle', mixin({ r: 4.6 }, halo), shapeG);
+      el('circle', mixin({ r: 3.4 }, common), shapeG);
     }
     var shared = s[0].indexOf('壶口') >= 0 ? '（晋陕合评）' : '';
     var hit = el('circle', {
