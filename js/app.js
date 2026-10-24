@@ -28,7 +28,15 @@
         c.setAttribute('aria-pressed', c.getAttribute('data-f') === f ? 'true' : 'false');
       });
       M.map.applyFilter();
+      M.map.redrawLegend();
       M.panel.render();
+      var note = document.getElementById('filterNote');
+      if (f === 'all') { note.hidden = true; }
+      else {
+        note.hidden = false;
+        note.className = 'filter-note' + (f === 'N' ? ' on-n' : '');
+        note.textContent = '仅显示' + model.CATC[f].label + '景观 · 点击查看全部';
+      }
     },
 
     /* 依据状态同步地图视口、返回按钮与面板 */
@@ -58,6 +66,7 @@
       document.querySelectorAll('.fchip').forEach(function (c) {
         c.addEventListener('click', function () { M.app.setFilter(c.getAttribute('data-f')); });
       });
+      document.getElementById('filterNote').addEventListener('click', function () { M.app.setFilter('all'); });
       document.getElementById('zoomBack').addEventListener('click', function () {
         if (M.state.selected) M.app.onProvClick(M.state.selected);
       });

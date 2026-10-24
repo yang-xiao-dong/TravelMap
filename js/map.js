@@ -244,12 +244,13 @@
     var dv = document.createElement('span');
     dv.className = 'divider';
     lg.appendChild(dv);
-    var itN = document.createElement('span'); itN.className = 'it';
+    var f = M.state.catFilter;
+    var itN = document.createElement('span'); itN.className = 'it' + (f === 'C' ? ' dim' : '');
     var swN = document.createElement('span'); swN.className = 'sw';
     swN.style.background = model.CATC.N.color; swN.style.borderRadius = '50%';
     itN.appendChild(swN); itN.appendChild(document.createTextNode('自然'));
     lg.appendChild(itN);
-    var itC = document.createElement('span'); itC.className = 'it';
+    var itC = document.createElement('span'); itC.className = 'it' + (f === 'N' ? ' dim' : '');
     var swC = document.createElement('span'); swC.className = 'sw';
     swC.style.background = model.CATC.C.color; swC.style.transform = 'rotate(45deg)'; swC.style.borderRadius = '2px';
     itC.appendChild(swC); itC.appendChild(document.createTextNode('人文'));
@@ -273,6 +274,7 @@
       else { animateTo(t); drawSelStroke(); }
     },
     applyFilter: applyView,
+    redrawLegend: drawLegend,
     pulse: pulseAt,
     get currentProv() { return curProv; }
   };

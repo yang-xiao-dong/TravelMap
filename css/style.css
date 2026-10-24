@@ -60,6 +60,18 @@ header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px;margin-bottom:1
 .panel-head .back{margin-left:auto;border:1px solid var(--line);background:#fff;color:var(--ink-2);border-radius:999px;font-size:12px;padding:4px 12px;cursor:pointer;transition:all .15s;font-family:inherit}
 .panel-head .back:hover{border-color:var(--accent);color:var(--accent)}
 
+/* 地图上的筛选提示条 */
+.filter-note{
+  position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:4;
+  border:1px solid rgba(232,145,45,.5);background:rgba(255,251,244,.92);color:#a35c12;
+  border-radius:999px;padding:5px 16px;font-size:12px;cursor:pointer;box-shadow:var(--shadow-sm);
+  font-family:inherit;transition:all .15s;white-space:nowrap;
+}
+.filter-note:hover{background:#fff;border-color:var(--cul)}
+.filter-note.on-n{border-color:rgba(31,157,85,.5);background:rgba(243,250,245,.92);color:#157a43}
+.filter-note.on-n:hover{background:#fff;border-color:var(--nat)}
+.legend .it.dim{opacity:.3}
+
 /* ---------- 类别筛选 ---------- */
 .filters{display:flex;gap:8px;flex-wrap:wrap}
 .fchip{
