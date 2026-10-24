@@ -201,3 +201,5 @@ footer{margin-top:18px;color:var(--muted);font-size:12px;line-height:1.8;user-se
 /* ---------- 可复制性 ---------- */
 ::selection{background:rgba(31,95,168,.2)}
 body,.stat,.panel-head,.legend,.map-hint{user-select:text;-webkit-user-select:text}
+
+.m-label{transition:opacity .18s}

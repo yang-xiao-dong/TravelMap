@@ -3,7 +3,7 @@
   'use strict';
   var model = null, geo = null;
   var mapEl, svg, world, dotLayer, photogLayer, selLayer, topLayer, labelLayer;
-  var provLabels = [], spotLabels = [], photogLabels = [];
+  var provLabels = [], spotLabels = [], photogLabels = [], baseSpotPts = [];
   var dragOn = false, dragMoved = false, dragStart = null;
   var W = 0, H = 0, baseP = null;
   var CHINA_BOUNDS = null;
@@ -61,9 +61,11 @@
   }
   function applyView() {
     world.setAttribute('transform', 'translate(' + view.tx.toFixed(2) + ',' + view.ty.toFixed(2) + ') scale(' + view.k.toFixed(4) + ')');
-    var rr = Math.max(2.0, 3.4 / view.k);
-    var rs = Math.max(4.2, 5.6 / view.k);
-    var hr = Math.max(4, 9 / view.k);
+    /* 尺寸按“屏幕像素”定义再除以 k：放大时点位屏幕大小恒定（仅轻微增大），不再膨胀 */
+    var scrR = 3.3 + 0.3 * Math.min(Math.max(view.k - 1, 0), 4);
+    var rr = scrR / view.k;
+    var rs = 2 * scrR / view.k;
+    var hr = 10 / view.k;
     var dim = view.k > 1.15 && !!curProv;
     var filter = M.state.catFilter;
     dotLayer.querySelectorAll('g.spotg').forEach(function (g) {
@@ -75,13 +77,13 @@
       var cx = +vis.getAttribute('data-cx'), cy = +vis.getAttribute('data-cy');
       if (vis.tagName === 'circle') {
         vis.setAttribute('r', rr);
-        halo.setAttribute('r', (rr + 1.2).toFixed(2));
+        halo.setAttribute('r', (rr + 1.3 / view.k).toFixed(2));
       } else {
         vis.setAttribute('x', (cx - rs / 2).toFixed(1));
         vis.setAttribute('y', (cy - rs / 2).toFixed(1));
         vis.setAttribute('width', rs.toFixed(1));
         vis.setAttribute('height', rs.toFixed(1));
-        var hs = rs + 2.4;
+        var hs = rs + 2.6 / view.k;
         halo.setAttribute('x', (cx - hs / 2).toFixed(1));
         halo.setAttribute('y', (cy - hs / 2).toFixed(1));
         halo.setAttribute('width', hs.toFixed(1));
@@ -96,17 +98,19 @@
       photogLayer.setAttribute('opacity', dim ? 0.35 : 1);
       var pr = Math.max(1, 1 / view.k);
       photogLayer.querySelectorAll('.pt-dot').forEach(function (c) { c.setAttribute('r', (1.6 * pr).toFixed(2)); });
+      photogLayer.querySelectorAll('.pt-ring').forEach(function (c) { c.setAttribute('r', ((+c.getAttribute('data-r')) / view.k).toFixed(2)); });
+      photogLayer.querySelectorAll('.pt-hit').forEach(function (c) { c.setAttribute('r', ((+c.getAttribute('data-hr')) / view.k).toFixed(2)); });
     }
     if (labelLayer) {
-      var fs;
+      var fs1 = (13 / view.k).toFixed(2), fs2 = (11 / view.k).toFixed(2);
+      var sw1 = (3 / view.k).toFixed(2), sw2 = (2.6 / view.k).toFixed(2);
       var op1 = Math.max(0, Math.min(1, (view.k - 2.2) / 0.8));
-      fs = (13 / view.k).toFixed(2);
-      provLabels.forEach(function (t) { t.setAttribute('font-size', fs); t.setAttribute('stroke-width', (3 / view.k).toFixed(2)); t.style.opacity = op1; });
       var op2 = Math.max(0, Math.min(1, (view.k - 4.2) / 1.2));
-      fs = (11 / view.k).toFixed(2);
-      spotLabels.forEach(function (t) { t.setAttribute('font-size', fs); t.setAttribute('stroke-width', (2.6 / view.k).toFixed(2)); t.style.opacity = op2; });
       var op3 = Math.max(0, Math.min(1, (view.k - 3.4) / 1.0));
-      photogLabels.forEach(function (t) { t.setAttribute('font-size', fs); t.setAttribute('stroke-width', (2.6 / view.k).toFixed(2)); t.style.opacity = op3; });
+      provLabels.forEach(function (t) { t.el.setAttribute('font-size', fs1); t.el.setAttribute('stroke-width', sw1); });
+      spotLabels.forEach(function (t) { t.el.setAttribute('font-size', fs2); t.el.setAttribute('stroke-width', sw2); });
+      photogLabels.forEach(function (t) { t.el.setAttribute('font-size', fs2); t.el.setAttribute('stroke-width', sw2); });
+      declutter(op1, op3, op2);
     }
   }
   function stopAnim() { if (animId) { cancelAnimationFrame(animId); animId = null; } }
@@ -264,8 +268,15 @@
     bindNav();
   }
 
+  function labelName(n) {
+    /* 剥两层行政区划前缀：如“九江市庐山市庐山风景名胜区”→“庐山风景名胜区” */
+    var rx = /^[^市州盟县]{1,12}?(市|地区|自治州|州|盟|县)/;
+    var t = n.replace(rx, '').replace(rx, '');
+    return t.length > 10 ? t.slice(0, 10) + '\u2026' : t;
+  }
   function buildLabels() {
     provLabels = []; spotLabels = []; photogLabels = [];
+    baseSpotPts = model.spots.map(function (s) { return baseP(s[3], s[4]); });
     labelLayer = el('g', { id: 'labels', 'pointer-events': 'none' }, world);
     model.china.features.forEach(function (f) {
       var c = featureCenter(f);
@@ -274,26 +285,77 @@
         'class': 'm-label prov-label', fill: '#3d4a63'
       }, labelLayer);
       t.textContent = f.properties.name;
-      provLabels.push(t);
+      provLabels.push({ el: t, x: c[0], y: c[1], len: f.properties.name.length + 2 });
     });
-    model.spots.forEach(function (s) {
-      var xy = baseP(s[3], s[4]);
+    /* 年份早者优先标注（2007 首批最经典），其余让位 */
+    var order = model.spots.map(function (s, i) { return i; })
+      .sort(function (a, b) { return model.spots[a][2] - model.spots[b][2]; });
+    order.forEach(function (i) {
+      var s = model.spots[i], xy = baseSpotPts[i];
       var meta = model.CATC[s[5]] || model.CATC.N;
       var t = el('text', {
-        x: (xy[0] + 6).toFixed(1), y: (xy[1] + 3.5).toFixed(1),
+        x: xy[0].toFixed(1), y: (xy[1] + 3.5).toFixed(1),
         'class': 'm-label spot-label', fill: meta.color
       }, labelLayer);
-      t.textContent = s[0];
-      spotLabels.push(t);
+      var txt = labelName(s[0]);
+      t.textContent = txt;
+      spotLabels.push({ el: t, x: xy[0], y: xy[1], len: txt.length, cat: s[5] });
     });
     model.photog.forEach(function (x) {
       var xy = baseP(x.lon, x.lat);
       var t = el('text', {
-        x: (xy[0] + 8).toFixed(1), y: (xy[1] + 4).toFixed(1),
+        x: xy[0].toFixed(1), y: (xy[1] + 4).toFixed(1),
         'class': 'm-label photog-label', fill: '#5b48c8'
       }, labelLayer);
-      t.textContent = '◎ ' + x.n + ' ' + x.cnt;
-      photogLabels.push(t);
+      var txt = '\u25ce ' + x.n + ' ' + x.cnt;
+      t.textContent = txt;
+      photogLabels.push({ el: t, x: xy[0], y: xy[1], len: txt.length });
+    });
+  }
+
+  /* 屏幕空间标注抽稀：省名 → 点位障碍 → 实拍名 → 景区名，放不下即隐藏；
+     标注坐标逐帧换算为屏幕位置，保证任意缩放级别都紧贴点位 */
+  function declutter(opProv, opPhotog, opSpot) {
+    var placed = [];
+    function hit(r) {
+      for (var i = 0; i < placed.length; i++) {
+        var q = placed[i];
+        if (!(r.x1 < q.x0 || r.x0 > q.x1 || r.y1 < q.y0 || r.y0 > q.y1)) return true;
+      }
+      return false;
+    }
+    function tryPlace(lab, anchorLeft, fs, targetOp) {
+      if (targetOp <= 0.02) { lab.el.style.opacity = 0; return; }
+      var sx = view.k * lab.x + view.tx, sy = view.k * lab.y + view.ty;
+      var w = lab.len * fs + 12, h = fs + 8;
+      var x0 = anchorLeft ? sx + 9 : sx - w / 2;
+      var y0 = sy - h / 2;
+      if (x0 < 2 || x0 + w > W - 2 || y0 < 2 || y0 + h > H - 2) { lab.el.style.opacity = 0; return; }
+      var r = { x0: x0, y0: y0, x1: x0 + w, y1: y0 + h };
+      if (hit(r)) { lab.el.style.opacity = 0; return; }
+      placed.push(r);
+      lab.el.style.opacity = targetOp;
+      var wx = (x0 - view.tx) / view.k;
+      if (!anchorLeft) wx = (x0 + w / 2 - view.tx) / view.k;
+      var wy = (y0 + h / 2 + fs * 0.36 - view.ty) / view.k;
+      lab.el.setAttribute('x', wx.toFixed(2));
+      lab.el.setAttribute('y', wy.toFixed(2));
+    }
+    provLabels.forEach(function (l) { tryPlace(l, false, 13, opProv); });
+    /* 可见点位本身作为障碍，避免标注压住别的点 */
+    var f = M.state.catFilter;
+    spotLabels.forEach(function (l) {
+      if (f !== 'all' && l.cat !== f) { l.el.style.opacity = 0; return; }
+      var sx = view.k * l.x + view.tx, sy = view.k * l.y + view.ty;
+      /* 菱形旋转后边界框更宽，避让盒按形状取半宽：菱形 9px、圆点 7px */
+      var m = l.cat === 'C' ? 9 : 7;
+      placed.push({ x0: sx - m, y0: sy - m, x1: sx + m, y1: sy + m });
+    });
+    if (M.state.photogOn) photogLabels.forEach(function (l) { tryPlace(l, true, 11, opPhotog); });
+    else photogLabels.forEach(function (l) { l.el.style.opacity = 0; });
+    spotLabels.forEach(function (l) {
+      if (f !== 'all' && l.cat !== f) return;
+      tryPlace(l, true, 11, opSpot);
     });
   }
 
@@ -340,7 +402,7 @@
     var ringR = 4.2 + 3.8 * Math.pow(x.cnt / model.photogMax, 0.6);
     var g = el('g', { 'class': 'photog-item' }, photogLayer);
     el('circle', {
-      'class': 'pt-ring', cx: cx, cy: cy, r: ringR.toFixed(1),
+      'class': 'pt-ring', cx: cx, cy: cy, r: ringR.toFixed(1), 'data-r': ringR.toFixed(1),
       fill: 'none', stroke: '#6d5ae0', 'stroke-width': 1.4, 'stroke-opacity': .85,
       'vector-effect': 'non-scaling-stroke', 'pointer-events': 'none'
     }, g);
@@ -349,7 +411,7 @@
       fill: '#6d5ae0', 'pointer-events': 'none'
     }, g);
     var hit = el('circle', {
-      'class': 'pt-hit', cx: cx, cy: cy, r: Math.max(9, ringR + 3), fill: 'transparent',
+      'class': 'pt-hit', cx: cx, cy: cy, r: Math.max(9, ringR + 3), 'data-hr': Math.max(9, ringR + 3), fill: 'transparent',
       'data-tooltip': '◎ Thomas 实拍坐标\n' + x.n + ' · ' + x.cnt + ' 张作品 · ' + M.app.fmtCoord(x.lon, x.lat)
     }, g);
     hit.style.cursor = 'pointer';
