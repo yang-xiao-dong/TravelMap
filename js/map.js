@@ -2,7 +2,7 @@
 (function (M) {
   'use strict';
   var model = null, geo = null;
-  var mapEl, svg, world, dotLayer, selLayer, topLayer;
+  var mapEl, svg, world, dotLayer, photogLayer, selLayer, topLayer;
   var W = 0, H = 0, baseP = null;
   var CHINA_BOUNDS = null;
   var view = { k: 1, tx: 0, ty: 0 };
@@ -89,6 +89,12 @@
       var inProv = !dim || p === curProv || (p === '兵团' && curProv === '新疆');
       vis.setAttribute('fill-opacity', (dim && !inProv) ? 0.15 : 0.92);
     });
+    if (photogLayer) {
+      photogLayer.style.display = M.state.photogOn ? '' : 'none';
+      photogLayer.setAttribute('opacity', dim ? 0.35 : 1);
+      var pr = Math.max(1, 1 / view.k);
+      photogLayer.querySelectorAll('.pt-dot').forEach(function (c) { c.setAttribute('r', (1.6 * pr).toFixed(2)); });
+    }
   }
   function stopAnim() { if (animId) { cancelAnimationFrame(animId); animId = null; } }
   function animateTo(target, dur) {
@@ -169,6 +175,8 @@
     selLayer = el('g', {}, world);
     dotLayer = el('g', { id: 'dots' }, world);
     model.spots.forEach(function (s) { drawSpot(s); });
+    photogLayer = el('g', { id: 'photog' }, world);
+    model.photog.forEach(function (x) { drawPhotog(x); });
 
     var t = curProv ? targetViewFor(curProv) : { k: 1, tx: 0, ty: 0 };
     view = { k: t.k, tx: t.tx, ty: t.ty };
@@ -214,6 +222,31 @@
     hit.addEventListener('mouseleave', function () { shapeG.removeAttribute('transform'); });
     hit.addEventListener('click', function (e) { e.stopPropagation(); M.app.onSpotClick(s); });
   }
+  function drawPhotog(x) {
+    var xy = baseP(x.lon, x.lat);
+    var cx = +xy[0].toFixed(1), cy = +xy[1].toFixed(1);
+    var ringR = 4.2 + 3.8 * Math.pow(x.cnt / model.photogMax, 0.6);
+    var g = el('g', { 'class': 'photog-item' }, photogLayer);
+    el('circle', {
+      'class': 'pt-ring', cx: cx, cy: cy, r: ringR.toFixed(1),
+      fill: 'none', stroke: '#6d5ae0', 'stroke-width': 1.4, 'stroke-opacity': .85,
+      'vector-effect': 'non-scaling-stroke', 'pointer-events': 'none'
+    }, g);
+    el('circle', {
+      'class': 'pt-dot', cx: cx, cy: cy, r: 1.6,
+      fill: '#6d5ae0', 'pointer-events': 'none'
+    }, g);
+    var hit = el('circle', {
+      'class': 'pt-hit', cx: cx, cy: cy, r: Math.max(9, ringR + 3), fill: 'transparent',
+      'data-tooltip': '◎ Thomas 实拍坐标\n' + x.n + ' · ' + x.cnt + ' 张作品 · ' + M.app.fmtCoord(x.lon, x.lat)
+    }, g);
+    hit.style.cursor = 'pointer';
+    hit.addEventListener('click', function (e) {
+      e.stopPropagation();
+      window.open('https://cn.chuweimin.com/spot-gallery', '_blank', 'noopener');
+    });
+  }
+
   function mixin(a, b) { var o = {}; for (var k in b) o[k] = b[k]; for (var k2 in a) o[k2] = a[k2]; return o; }
 
   function drawSelStroke() {
@@ -250,6 +283,12 @@
     swN.style.background = model.CATC.N.color; swN.style.borderRadius = '50%';
     itN.appendChild(swN); itN.appendChild(document.createTextNode('自然'));
     lg.appendChild(itN);
+    var f2 = M.state.photogOn;
+    var itP = document.createElement('span'); itP.className = 'it' + (f2 ? '' : ' dim');
+    var swP = document.createElement('span'); swP.className = 'sw';
+    swP.style.background = 'none'; swP.style.border = '2px solid #6d5ae0'; swP.style.borderRadius = '50%';
+    itP.appendChild(swP); itP.appendChild(document.createTextNode('实拍'));
+    lg.appendChild(itP);
     var itC = document.createElement('span'); itC.className = 'it' + (f === 'N' ? ' dim' : '');
     var swC = document.createElement('span'); swC.className = 'sw';
     swC.style.background = model.CATC.C.color; swC.style.transform = 'rotate(45deg)'; swC.style.borderRadius = '2px';

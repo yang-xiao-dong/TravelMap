@@ -45,6 +45,9 @@
     return D.spots.filter(function (s) { return s[2] === 2024; }).length;
   }
 
+  var photog = (D.photog || []).map(function (x) { return { n: x[0], lon: x[1], lat: x[2], cnt: x[3] }; });
+  var photogMax = photog.reduce(function (m, x) { return Math.max(m, x.cnt); }, 1);
+
   M.model = {
     PROV_LIST: PROV_LIST,
     CATC: CATC,
@@ -58,6 +61,8 @@
     maxCount: maxCount,
     catCountsFor: catCountsFor,
     maxOf: maxOf,
-    newOf2024: newOf2024
+    newOf2024: newOf2024,
+    photog: photog,
+    photogMax: photogMax
   };
 })(window.M5A = window.M5A || {});

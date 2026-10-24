@@ -19,6 +19,8 @@ body{
 /* ---------- 头部 ---------- */
 header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px;margin-bottom:18px}
 .title h1{margin:0;font-size:26px;font-weight:700;letter-spacing:.5px}
+.title h1.serif{font-family:Georgia,"Noto Serif SC","Source Han Serif SC","Songti SC",SimSun,serif;font-weight:600;letter-spacing:1px}
+.title p b{color:var(--ink-2);font-weight:600}
 .title h1 em{font-style:normal;color:var(--accent)}
 .title p{margin:4px 0 0;color:var(--muted);font-size:13px}
 .stats{display:flex;gap:10px;margin-left:auto;flex-wrap:wrap}
@@ -71,6 +73,10 @@ header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px;margin-bottom:1
 .filter-note.on-n{border-color:rgba(31,157,85,.5);background:rgba(243,250,245,.92);color:#157a43}
 .filter-note.on-n:hover{background:#fff;border-color:var(--nat)}
 .legend .it.dim{opacity:.3}
+.pchip{border-color:rgba(109,90,224,.4)}
+.pchip[aria-pressed="true"]{background:#4c3ad1;border-color:#4c3ad1}
+.pring{width:9px;height:9px;border:2px solid #6d5ae0;border-radius:50%;display:inline-block;box-sizing:border-box}
+#photog circle.pt-ring{transition:r .2s}
 
 /* ---------- 类别筛选 ---------- */
 .filters{display:flex;gap:8px;flex-wrap:wrap}

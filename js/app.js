@@ -2,7 +2,7 @@
 (function (M) {
   'use strict';
   var model = null;
-  M.state = { selected: null, catFilter: 'all', q: '' };
+  M.state = { selected: null, catFilter: 'all', q: '', photogOn: true };
 
   M.app = {
     fmtCoord: function (lon, lat) { return lon.toFixed(2) + '°E, ' + lat.toFixed(2) + '°N'; },
@@ -67,6 +67,14 @@
         c.addEventListener('click', function () { M.app.setFilter(c.getAttribute('data-f')); });
       });
       document.getElementById('filterNote').addEventListener('click', function () { M.app.setFilter('all'); });
+      var pt = document.getElementById('photogToggle');
+      pt.setAttribute('aria-pressed', 'true');
+      pt.addEventListener('click', function () {
+        M.state.photogOn = !M.state.photogOn;
+        pt.setAttribute('aria-pressed', String(M.state.photogOn));
+        M.map.applyFilter();
+        M.map.redrawLegend();
+      });
       document.getElementById('zoomBack').addEventListener('click', function () {
         if (M.state.selected) M.app.onProvClick(M.state.selected);
       });

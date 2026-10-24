@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>全国 5A 级旅游景区分布 · 358 家</title>
-<link rel="stylesheet" href="css/style.css?v=5">
+<link rel="stylesheet" href="css/style.css?v=8">
 </head>
 <body>
 <div class="wrap">
   <header>
     <div class="title">
-      <h1>全国 <em>5A</em> 级旅游景区分布</h1>
-      <p>文化和旅游部名录 · 截至 2024 年 12 月批次 · 点击省份放大 · 点击彩点看详情 · ESC 返回全国</p>
+      <h1 class="serif">全国 <em>5A</em> 级旅游景区分布</h1>
+      <p>文旅部名录 · 截至 2024 年 12 月批次 · 叠加摄影师 <b>Thomas 看看世界</b> 实拍坐标 · 点击省份放大 · ESC 返回全国</p>
     </div>
     <div class="stats">
       <div class="stat"><b id="st-total">—</b><span>景区总数</span></div>
@@ -51,6 +51,7 @@
         <button type="button" class="fchip" data-f="all" aria-pressed="true">全部</button>
         <button type="button" class="fchip" data-f="N" aria-pressed="false"><span class="fdot"></span>自然</button>
         <button type="button" class="fchip" data-f="C" aria-pressed="false"><span class="fsq"></span>人文</button>
+        <button type="button" class="fchip pchip" id="photogToggle" aria-pressed="true" data-tooltip="Thomas看看世界 EXIF 实拍坐标聚合"><span class="pring"></span>实拍地 112</button>
       </div>
       <div class="panel" id="panel"></div>
     </div>
@@ -64,13 +65,14 @@
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="js/data-china.js?v=5"></script>
-<script src="js/data-spots.js?v=5"></script>
-<script src="js/geo.js?v=5"></script>
-<script src="js/model.js?v=5"></script>
-<script src="js/map.js?v=5"></script>
-<script src="js/panel.js?v=5"></script>
-<script src="js/interact.js?v=5"></script>
-<script src="js/app.js?v=5"></script>
+<script src="js/data-china.js?v=8"></script>
+<script src="js/data-spots.js?v=8"></script>
+<script src="js/data-photog.js?v=8"></script>
+<script src="js/geo.js?v=8"></script>
+<script src="js/model.js?v=8"></script>
+<script src="js/map.js?v=8"></script>
+<script src="js/panel.js?v=8"></script>
+<script src="js/interact.js?v=8"></script>
+<script src="js/app.js?v=8"></script>
 </body>
 </html>
