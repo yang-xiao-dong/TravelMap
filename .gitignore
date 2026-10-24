@@ -6,3 +6,6 @@ dist/
 .DS_Store
 Thumbs.db
 *.swp
+
+# 验收截图（交付前生成，可随时重截）
+shots/
