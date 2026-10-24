@@ -198,8 +198,8 @@
       el('rect', mixin({ x: cx - 4.2, y: cy - 4.2, width: 8.4, height: 8.4, transform: 'rotate(45 ' + cx + ' ' + cy + ')' }, halo), shapeG);
       el('rect', mixin({ x: cx - 2.8, y: cy - 2.8, width: 5.6, height: 5.6, transform: 'rotate(45 ' + cx + ' ' + cy + ')' }, common), shapeG);
     } else {
-      el('circle', mixin({ r: 4.6 }, halo), shapeG);
-      el('circle', mixin({ r: 3.4 }, common), shapeG);
+      el('circle', mixin({ cx: cx, cy: cy, r: 4.6 }, halo), shapeG);
+      el('circle', mixin({ cx: cx, cy: cy, r: 3.4 }, common), shapeG);
     }
     var shared = s[0].indexOf('壶口') >= 0 ? '（晋陕合评）' : '';
     var hit = el('circle', {
