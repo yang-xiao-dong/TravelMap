@@ -1,0 +1,8 @@
+# 构建产物（由 tools/build.py 生成）
+china-5a-map.html
+dist/
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+*.swp
