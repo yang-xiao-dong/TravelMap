@@ -80,7 +80,7 @@
     init: function (panel, qInput) {
       model = M.model;
       panelEl = panel; qEl = qInput;
-      qEl.addEventListener('input', function () { M.state.q = qEl.value.trim().toLowerCase(); M.panel.render(); });
+      qEl.addEventListener('input', function () { M.state.q = qEl.value.trim().toLowerCase(); M.panel.render(); M.app.updateDrawer(); });
       /* 事件代理：复制坐标 / 名称定位 */
       panelEl.addEventListener('click', function (e) {
         var cp = e.target.closest ? e.target.closest('[data-copy]') : null;
@@ -106,7 +106,8 @@
       var q = M.state.q;
       if (q) renderSearch(q);
       else if (M.state.selected) renderProvince(M.state.selected);
-      else renderRanking();
+      else if (M.state.rankOn) renderRanking();
+      else panelEl.innerHTML = '';
     }
   };
 })(window.M5A = window.M5A || {});
