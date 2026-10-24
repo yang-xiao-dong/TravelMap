@@ -59,8 +59,8 @@
   }
   function applyView() {
     world.setAttribute('transform', 'translate(' + view.tx.toFixed(2) + ',' + view.ty.toFixed(2) + ') scale(' + view.k.toFixed(4) + ')');
-    var rr = Math.max(1.6, 2.6 / view.k);
-    var rs = Math.max(3.4, 4.6 / view.k);
+    var rr = Math.max(1.8, 3.2 / view.k);
+    var rs = Math.max(3.8, 5.4 / view.k);
     var hr = Math.max(4, 9 / view.k);
     var dim = view.k > 1.15;
     var filter = M.state.catFilter;
@@ -179,13 +179,13 @@
     var common = {
       'class': 'vis', 'data-cx': cx, 'data-cy': cy,
       fill: meta.color, 'fill-opacity': .92,
-      stroke: '#fff', 'stroke-width': 1, 'vector-effect': 'non-scaling-stroke',
+      stroke: '#fff', 'stroke-width': 0.8, 'stroke-opacity': .95, 'vector-effect': 'non-scaling-stroke',
       'pointer-events': 'none'
     };
     if (cat === 'C') {
-      el('rect', mixin({ x: cx - 2.3, y: cy - 2.3, width: 4.6, height: 4.6, transform: 'rotate(45 ' + cx + ' ' + cy + ')' }, common), shapeG);
+      el('rect', mixin({ x: cx - 2.7, y: cy - 2.7, width: 5.4, height: 5.4, transform: 'rotate(45 ' + cx + ' ' + cy + ')' }, common), shapeG);
     } else {
-      el('circle', mixin({ r: 2.6 }, common), shapeG);
+      el('circle', mixin({ r: 3.2 }, common), shapeG);
     }
     var shared = s[0].indexOf('壶口') >= 0 ? '（晋陕合评）' : '';
     var hit = el('circle', {
