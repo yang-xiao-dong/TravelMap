@@ -93,6 +93,13 @@ td.m.cur{color:#fff;background:var(--accent)}
       <ul><li>3 月 东湖夜樱 · 云雾山万亩杜鹃</li><li>6–9 月 大九湖晨雾（官方晨雾预报）· 齐岳山风车云海</li><li>11 月 罗田水上红叶（上旬）→ 随州银杏（中下旬）</li></ul>
       <div class="go">进入专题地图 →</div>
     </a>
+    <a class="card" href="yellow-river-map.html" style="--c:#b3541e">
+      <div class="top"><h3>黄河全线</h3><em>源区 → 入海口 · 2026</em></div>
+      <div class="desc">三江源星宿海 / 贵德清黄河 / 沙坡头 / 碛口古镇 / 乾坤湾 / 壶口 / 三门峡天鹅 / 小浪底调水调沙 / 东营黄蓝交汇 + 6 处异形住宿（🛖 窑洞·沙宿·地坑院）</div>
+      <div class="stats"><div><b>14</b><span> 景区</span></div><div><b>28</b><span> 小景点/机位</span></div><div><b>6</b><span> 异形住宿</span></div></div>
+      <ul><li>3–4 月 壶口桃花汛 · 郑州桃花峪</li><li>6 月下–7 月上 小浪底调水调沙「三条水龙」</li><li>12–2 月 三门峡雪中天鹅 · 壶口冰瀑</li></ul>
+      <div class="go">进入专题地图 →</div>
+    </a>
     <a class="card" href="henan-map.html" style="--c:var(--hn)">
       <div class="top"><h3>河南</h3><em>太行 + 伏牛山</em></div>
       <div class="desc">老君山云海金顶 / 云台山红石峡 / 郭亮挂壁公路 / 三门峡天鹅 / 小浪底调水调沙等 17 景区</div>
@@ -105,7 +112,7 @@ td.m.cur{color:#fff;background:var(--accent)}
   <div class="cal">
     <h2>📅 12 月轮拍日历（当前月份自动高亮）</h2>
     <table>
-      <tr><th style="width:52px">月份</th><th>秦岭北麓</th><th>湖北</th><th>河南</th></tr>
+      <tr><th style="width:52px">月份</th><th>秦岭北麓</th><th>湖北</th><th>河南</th><th>黄河</th></tr>
       <tbody id="calBody"></tbody>
     </table>
   </div>
@@ -167,13 +174,21 @@ var CAL = [
  ['11月','红叶收尾','罗田水上红叶（上）→ 随州银杏（中下）','红叶收官 · 天鹅抵达（下）'],
  ['12月','雪景预备','九宫山雾凇','三门峡雪中天鹅 · 老君山雪']
 ];
+var YR = {
+ '1–2月':'壶口冰瀑 · 三门峡天鹅', '3月':'壶口桃花汛启动（下）· 桃花峪',
+ '4月':'桃花汛洪峰 · 贵德清黄河', '5月':'源区开冻·星宿海丰水（下）',
+ '6月':'小浪底调水调沙（下旬）· 源区进山', '7月':'调水调沙最壮观（上旬）',
+ '8月':'夏汛大河气象', '9月':'壶口秋汛启动 · 碛口落日',
+ '10月':'壶口雷吼峡 · 乾坤湾秋色', '11月':'碛口/李家山秋收尾',
+ '12月':'三门峡天鹅 · 壶口冰瀑始'
+};
 var cur = new Date().getMonth() + 1;
 document.getElementById('calBody').innerHTML = CAL.map(function (r) {
   var on = (cur === 10 && r[0] === '10月') || (cur === 11 && r[0] === '11月') || (cur === 12 && r[0] === '12月')
         || (cur >= 1 && cur <= 2 && r[0] === '1–2月') || (cur === 3 && r[0] === '3月') || (cur === 4 && r[0] === '4月')
         || (cur === 5 && r[0] === '5月') || (cur === 6 && r[0] === '6月') || (cur === 7 && r[0] === '7月')
         || (cur === 8 && r[0] === '8月') || (cur === 9 && r[0] === '9月');
-  return '<tr><td class="m' + (on ? ' cur' : '') + '">' + r[0] + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td><td>' + r[3] + '</td></tr>';
+  return '<tr><td class="m' + (on ? ' cur' : '') + '">' + r[0] + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td><td>' + r[3] + '</td><td>' + (YR[r[0]] || '') + '</td></tr>';
 }).join('');
 </script>
 </body>
