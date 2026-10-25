@@ -28,6 +28,11 @@ def check(path):
     for u in d.get('lodging', []):
         if not ok_num(u.get('lon')) or not ok_num(u.get('lat')):
             errs.append('lodging「%s」坐标缺失' % u.get('n'))
+    for u in d.get('local', []):
+        if not u.get('n') or not u.get('type') or not u.get('tip'):
+            errs.append('local「%s」缺 n/type/tip' % u.get('n'))
+        if u.get('lon') is not None and (not ok_num(u.get('lon')) or not ok_num(u.get('lat'))):
+            errs.append('local「%s」坐标非法' % u.get('n'))
     print(path, 'spots=%d subs=%d' % (len(d['spots']), sum(len(s['subs']) for s in d['spots'])))
     if errs:
         print('\n'.join(errs))

@@ -106,6 +106,7 @@ aside h2{font-size:13px;color:var(--sub);font-weight:600;margin:4px 0 8px;letter
 var CAT = __CAT__;
 var SPOTS = __SPOTS__;
 var LODGING = __LODGING__;
+var LOCAL = __LOCAL__;
 var REGION_ORDER = __REGION_ORDER__;
 
 var map = L.map('map', { zoomControl:true, minZoom:__MINZOOM__, maxZoom:18 }).setView([__CLAT__, __CLON__], __ZINIT__);
@@ -168,7 +169,14 @@ function stayPopup(u){
     + '<div class="pp-row"><b class="k">要点</b>　' + u.tip + '</div>'
     + '<div class="pp-links"><a href="https://cn.bing.com/maps?q=' + coordTxt(u.lat, u.lon) + '" target="_blank" rel="noopener">Bing 卫星对照 →</a></div>';
 }
-var markers = {}, subLayers = {}, stayLayer = L.layerGroup();
+function localPopup(u){
+  return '<div class="pp-name" style="font-size:14px;color:#8a5a00">✦ ' + u.n + '</div>'
+    + '<div class="pp-region">地方特色 · ' + u.type + (u.month ? ' · ' + u.month : '') + '</div>'
+    + (u.region ? '<div class="pp-region">' + u.region + '</div>' : '')
+    + (u.lon != null ? '<div class="pp-coord"><span>' + coordTxt(u.lat, u.lon) + '</span>' + copyBtn(coordTxt(u.lat, u.lon)) + '</div>' : '')
+    + '<div class="pp-row" style="line-height:1.55">' + u.tip + '</div>';
+}
+var markers = {}, subLayers = {}, stayLayer = L.layerGroup(), localLayer = L.layerGroup();
 SPOTS.forEach(function(s){
   var c = CAT[s.cat].color;
   var icon = L.divIcon({ className:'', iconSize:[24,24], iconAnchor:[12,12], popupAnchor:[0,-12],
@@ -193,6 +201,13 @@ LODGING.forEach(function(u){
   L.marker([u.lat, u.lon], {icon:di, title:u.n}).bindPopup(stayPopup(u), {maxWidth:280}).addTo(stayLayer);
 });
 if (LODGING.length) stayLayer.addTo(map);
+LOCAL.forEach(function(u){
+  if (u.lon == null) return;
+  var di = L.divIcon({ className:'', iconSize:[18,18], iconAnchor:[9,9], popupAnchor:[0,-9],
+    html:'<div style="width:18px;height:18px;border-radius:50%;background:#f5e6c8;border:2px solid #8a5a00;box-shadow:0 1px 3px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;color:#8a5a00;font:700 11px/1 sans-serif">✦</div>' });
+  L.marker([u.lat, u.lon], {icon:di, title:u.n}).bindPopup(localPopup(u), {maxWidth:280}).addTo(localLayer);
+});
+if (LOCAL.some(function(u){ return u.lon != null; })) localLayer.addTo(map);
 
 var gb = L.latLngBounds(SPOTS.concat(LODGING).map(function(s){ return [s.lat, s.lon]; }));
 function fitAll(){ map.invalidateSize(); map.setView(gb.getCenter(), map.getBoundsZoom(gb, true, L.point(46,46)), {animate:false}); }
@@ -295,6 +310,24 @@ function buildList(){
       listEl.appendChild(r);
     });
   }
+  if (LOCAL.length) {
+    var lg = document.createElement('div'); lg.className = 'grp'; lg.textContent = '✦ 地方特色 · 节庆风物';
+    listEl.appendChild(lg);
+    LOCAL.forEach(function(u){
+      var r = document.createElement('div'); r.className = 'stayrow';
+      r.style.borderLeftColor = '#8a5a00'; r.style.background = '#faf6ec';
+      r.innerHTML = '<div class="sn" style="color:#8a5a00">✦ ' + u.n + (u.month ? ' <span style="font-weight:400;color:#a08a5a">(' + u.month + ')</span>' : '') + '</div>'
+        + '<div class="st">' + u.type + (u.region ? ' · ' + u.region : '') + ' · ' + u.tip + '</div>';
+      r.onclick = function(){
+        if (u.lon == null) return;
+        map.flyTo([u.lat, u.lon], 11, {duration:.8});
+        localLayer.eachLayer(function(ly){
+          if (ly.getLatLng && Math.abs(ly.getLatLng().lat - u.lat) < 1e-6) ly.openPopup();
+        });
+      };
+      listEl.appendChild(r);
+    });
+  }
   if (!listEl.children.length) listEl.innerHTML = '<div style="font-size:12px;color:var(--sub);padding:20px 4px">该题材暂无点位</div>';
 }
 function syncMarkers(){
@@ -356,6 +389,7 @@ def main(path):
         s2['subs'] = [{k: u[k] for k in keep_sub if k in u} for u in s['subs']]
         spots.append(s2)
     lodging = [{k: u[k] for k in ('n','lon','lat','type','tip') if k in u} for u in (d.get('lodging') or [])]
+    local = [{k: u[k] for k in ('n','type','region','month','tip','lon','lat') if k in u} for u in (d.get('local') or [])]
     html = (TPL
         .replace('__TITLE__', d['title'])
         .replace('__H1__', d['h1'])
@@ -367,6 +401,7 @@ def main(path):
         .replace('__CAT__', json.dumps(cats, ensure_ascii=False))
         .replace('__SPOTS__', json.dumps(spots, ensure_ascii=False))
         .replace('__LODGING__', json.dumps(lodging, ensure_ascii=False))
+        .replace('__LOCAL__', json.dumps(local, ensure_ascii=False))
         .replace('__REGION_ORDER__', json.dumps(d['region_order'], ensure_ascii=False))
         .replace('__MINZOOM__', str(d.get('min_zoom', 6)))
         .replace('__CLAT__', str(d['center'][0]))
