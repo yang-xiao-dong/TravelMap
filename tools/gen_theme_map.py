@@ -377,6 +377,8 @@ STD_CATS = {
 
 def main(path):
     d = json.load(io.open(path, encoding='utf-8'))
+    if isinstance(d.get('calendar'), list):
+        d['calendar'] = u'<br>'.join(d['calendar'])
     cats = dict(STD_CATS)
     for k, v in (d.get('cat_extra') or {}).items():
         cats[k] = v
