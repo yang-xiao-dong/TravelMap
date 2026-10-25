@@ -184,15 +184,17 @@ QIN.pano = (function () {
     var nl = Math.sqrt(gx * gx + gy * gy + 1);
     var lam = clamp((-gx * sdx - gy * sdy + sdz) / nl, 0, 1);
     var li = amb + (1 - amb) * lam;
-    /* 优先卫星影像反照率（湖面/湿地/城市真实呈现），轻微提亮增强可视性 */
-    var a = st.tex ? st.tex.sample(lon, lat) : null, b, t;
+    /* 优先卫星影像反照率（湖面/湿地/城市真实呈现）：
+       双线性已消像素块；轻提亮 + 与海拔色带混色 35%，避免色块跳变 */
+    var a = st.tex ? st.tex.sample(lon, lat) : null, b, t, base = terrBase(h);
     if (a) {
-      b = [clamp((a[0] - 128) * 1.12 + 138, 0, 255),
-           clamp((a[1] - 128) * 1.12 + 138, 0, 255),
-           clamp((a[2] - 128) * 1.12 + 138, 0, 255)];
+      var m = 0.65;
+      b = [clamp(((a[0] - 128) * 1.05 + 132) * m + base[0] * (1 - m), 0, 255),
+           clamp(((a[1] - 128) * 1.05 + 132) * m + base[1] * (1 - m), 0, 255),
+           clamp(((a[2] - 128) * 1.05 + 132) * m + base[2] * (1 - m), 0, 255)];
       t = (1 - Math.exp(-d / 9000)) * 0.8;
     } else {
-      b = terrBase(h);
+      b = base;
       t = (1 - Math.exp(-d / 9000)) * 0.88;
     }
     var r = b[0] * li * lc[0] / 255, gg = b[1] * li * lc[1] / 255, bb = b[2] * li * lc[2] / 255;

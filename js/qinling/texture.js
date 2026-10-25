@@ -70,15 +70,26 @@ QIN.tex = (function () {
       imgs.forEach(function (d) { if (d) okCnt++; });
       if (okCnt === 0) return { sample: null, bad: jobs.length };
       var n = TILE * Math.pow(2, z), ox = tx0 * TILE, oy = ty0 * TILE;
+      /* 标准双线性插值采样：避免最近邻的硬像素块（马赛克感） */
       function sample(lon, lat) {
         var q = px(lon, lat, z);
         var gx = q[0] - ox, gy = q[1] - oy;
-        var tx = Math.floor(gx / TILE), ty = Math.floor(gy / TILE);
-        if (tx < 0 || ty < 0 || tx >= r || ty >= r) return null;
-        var d = imgs[ty * r + tx];
-        if (!d) return null;
-        var i = ((gy - ty * TILE) * TILE + (gx - tx * TILE)) * 4 | 0;
-        return [d.data[i], d.data[i + 1], d.data[i + 2]];
+        var x0 = Math.floor(gx - 0.5), y0 = Math.floor(gy - 0.5);
+        var u = gx - 0.5 - x0, v = gy - 0.5 - y0;
+        var c = [0, 0, 0], wsum = 0;
+        for (var k = 0; k < 4; k++) {
+          var sx = x0 + (k & 1), sy = y0 + (k >> 1);
+          var tx = Math.floor(sx / TILE), ty = Math.floor(sy / TILE);
+          if (tx < 0 || ty < 0 || tx >= r || ty >= r) continue;
+          var d = imgs[ty * r + tx];
+          if (!d) continue;
+          var i = ((sy - ty * TILE) * TILE + (sx - tx * TILE)) * 4 | 0;
+          var w = (k & 1 ? u : 1 - u) * (k >> 1 ? v : 1 - v);
+          c[0] += d.data[i] * w; c[1] += d.data[i + 1] * w; c[2] += d.data[i + 2] * w;
+          wsum += w;
+        }
+        if (wsum < 0.5) return null;   /* 出界/缺瓦片：回退色带 */
+        return [c[0] / wsum | 0, c[1] / wsum | 0, c[2] / wsum | 0];
       }
       return { sample: sample, bad: jobs.length - okCnt };
     });
