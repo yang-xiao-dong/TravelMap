@@ -47,14 +47,33 @@
 - 每省新增侧栏「季节日历」块（上面两行轮动文字落成表）。
 - 河南增「冬季候鸟」题材色（#1c7ed6 冷蓝）。
 
+## 四、扩容记录（2026-10-24 第二轮深度调研后）
+
+应用户要求「要多加」，两省各扩至 **17 景区**（湖北 47 小景点 / 河南 46 小景点），新增：
+
+- **湖北 +7**：腾龙洞（5A，卧龙吞江/激光秀/《夷水丽川》，洞内恒温 14–18℃）、齐岳山（风车+草场云海）、
+  梭布垭石林（奥陶纪石林：莲花寨/犀牛沟/磨子沟，门票 78+景交 30）、鹿院坪（天坑古村+四级瀑布）、
+  清江古河床（三洞连两坑，需向导）、柴埠溪大峡谷（得乐线/坛子口）、木兰云雾山（万亩杜鹃 3 月底–4 月中）。
+- **河南 +7**：青天河（靳家岭红叶核心，10 月中–11 月中）、神农山（白松岭「龙鳞长城」，雨后初晴云海）、
+  关山（红石河+红叶）、宝泉（大峡谷+崖天下，金秋红叶季）、天界山·回龙（云峰画廊 360° 栈道+老爷顶日落）、
+  龙潭大峡谷（黛眉山地质公园，上午入谷）、黄河小浪底（**年度事件：6 月下旬–7 月上旬调水调沙，排沙洞 3 条「水龙」**）。
+
+实现：`hubei-map.html` / `henan-map.html`（复用 qinling 模板与 js/qinling/ 人视模拟模块），
+河南新增「冬季候鸟·天鹅」题材色 #1c7ed6，侧栏各含季节日历。
+
 ## 来源
 
 - 新华网：大九湖晨雾 — http://www.news.cn/photo/20240816/3e7e62fbe7c14ccba3691167e5d5b82d/c.html
 - 恩施大峡谷官网票务 — https://www.esdaxiagu.com/scenic
-- 屏山峡谷预约限流对比攻略 — https://m.cncn.net/blog/1326705
+- 屏山峡谷预约限流对比攻略 — https://m.cncn.com/blog/1326705
 - 网易：河南摄影日出云海机位推荐 — https://www.163.com/dy/article/L7JC7ERH0553VDX0.html
 - Trip.com：郭亮挂壁公路机位 — https://hk.trip.com/moments/theme/poi-guoliang-tunnel-56806312-guides-993135
 - 人民网河南：云台山秋色 — http://henan.people.com.cn/n2/2024/1106/c351638-41032735.html
 - 新浪河南：三门峡大天鹅 — https://henan.sina.cn/news/m/2024-11-09/detail-incvmmiv9919182.d.html
 - 湖北日报：罗田红叶/天堂寨 — https://www.ctdsb.net/c1722_202310/1939095.html
 - 百度百科：中国千年银杏谷（2025 窗口期）— https://baike.baidu.com/item/中国千年银杏谷/9921619
+- Trip.com：腾龙洞（卧龙吞江/激光秀/门票）— https://hk.trip.com/moments/poi-tenglong-cave-79418
+- Trip.com：梭布垭石林游览 — https://hk.trip.com/moments/theme/poi-mozigou-valley-22866965-hiking-990133/
+- 宝泉官网（5A/金秋红叶季）— https://www.baoquanlvyou.com/jingqugaikuang.html
+- 八里沟官网：天界山云峰画廊 — http://m.xxbaligou.com/blg/43_6
+- 人民日报海外版：2025 黄河调水调沙 — https://paper.people.com.cn/rmrbhwb/pc/content/202507/02/content_30084057.html

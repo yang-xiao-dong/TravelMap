@@ -59,6 +59,9 @@ aside h2{font-size:13px;color:var(--sub);font-weight:600;margin:4px 0 8px;letter
 .pp-subs li:before{content:'▸ ';color:var(--accent)}
 .pp-links{margin-top:8px;display:flex;gap:10px}
 .pp-links a{font-size:12px;color:var(--accent);text-decoration:none;border-bottom:1px dashed var(--accent)}
+.p3dopen{border:1px solid var(--accent);background:#fff;color:var(--accent);font-size:12px;border-radius:6px;padding:2px 10px;cursor:pointer}
+.p3dopen:hover{background:var(--accent);color:#fff}
+.subrow .sn .p3dopen{float:right;font-size:11px;padding:0 7px;line-height:19px;border-radius:5px}
 @media (max-width:760px){.layout{grid-template-columns:1fr;grid-template-rows:auto 34vh 1fr}aside{border-right:none;border-bottom:1px solid var(--line)}}
 </style>
 </head>
@@ -66,7 +69,7 @@ aside h2{font-size:13px;color:var(--sub);font-weight:600;margin:4px 0 8px;letter
 <div class="layout">
   <header>
     <h1>秦岭北麓 · 摄影采风地图</h1>
-    <span class="sub">景区 → 小景点 → 机位 三级结构 · 坐标为 WGS84 近似参考点，导航以景区大门为准</span>
+    <span class="sub">景区 → 小景点 → 机位 三级结构 · 坐标为 WGS84 近似参考点，导航以景区大门为准 · 专题：<a href="qinling-map.html" style="color:var(--accent);font-weight:700">秦岭</a> / <a href="hubei-map.html" style="color:var(--accent)">湖北</a> / <a href="henan-map.html" style="color:var(--accent)">河南</a></span>
     <a class="back" href="index.html">← 全国 5A 地图</a>
   </header>
   <aside>
@@ -79,6 +82,10 @@ aside h2{font-size:13px;color:var(--sub);font-weight:600;margin:4px 0 8px;letter
 </div>
 
 <script src="lib/leaflet.js"></script>
+<!-- 人视模拟模块：高程(dem) / 太阳位置(sun) / 渲染与交互(pano)，见 js/qinling/ -->
+<script src="js/qinling/dem.js?v=1"></script>
+<script src="js/qinling/sun.js?v=2"></script>
+<script src="js/qinling/pano.js?v=3"></script>
 <script>
 /* ---------- 数据 ---------- */
 var CAT = {
@@ -97,13 +104,13 @@ var SPOTS = [
         '高山杜鹃（2200 m+ 梯次开放）：上午 10 点前侧逆光拍透光花瓣，70–200 长焦压缩花海与山脊线',
         '芦花河原始森林：雨后清晨逆光 + 小光圈拍丁达尔光',
         '秦岭梁草甸：秋色期 16:00 后金色侧光'],
-  subs:[
-   {n:'大门·游客中心', lon:108.5450, lat:33.9600, tip:'涝峪进沟约 30 km，大门购票乘观光车'},
-   {n:'芦花河原始森林', lon:108.5330, lat:33.9520, tip:'雨后清晨逆光小光圈拍丁达尔光'},
-   {n:'龙潭子·挂天飞瀑', lon:108.5380, lat:33.9440, tip:'散射光最佳；ND64–1000 慢门 + CPL；溪石低机位仰拍'},
-   {n:'秦岭梁草甸', lon:108.5270, lat:33.9380, tip:'秋色期 16:00 后金色侧光'},
-   {n:'冰河翠·石海', lon:108.5210, lat:33.9340, tip:'第四纪冰川砾石，低角度侧光扫纹理'},
-   {n:'冰晶顶（3015 m·机位）', lon:108.5170, lat:33.9330, tip:'太白以东秦岭最高点：凌晨出发拍日出云海，广角收群山层线；索道上站后徒步；保暖与高反预案'}
+   subs:[
+   {n:'大门·游客中心', lon:108.5450, lat:33.9600, tip:'涝峪进沟约 30 km，大门购票乘观光车（海拔约 860 m）'},
+   {n:'芦花河原始森林', lon:108.5525, lat:33.9419, tip:'约 1750 m：雨后清晨逆光小光圈拍丁达尔光'},
+   {n:'龙潭子·挂天飞瀑', lon:108.5773, lat:33.8800, tip:'约 2050 m：散射光最佳；ND64–1000 慢门 + CPL；溪石低机位仰拍'},
+   {n:'秦岭梁草甸', lon:108.5847, lat:33.8615, tip:'约 2370 m 高山草甸：秋色期 16:00 后金色侧光'},
+   {n:'冰河翠·石海', lon:108.5896, lat:33.8492, tip:'约 2670 m：第四纪冰川砾石，低角度侧光扫纹理'},
+   {n:'冰晶顶（3015 m·机位）', lon:108.5900, lat:33.8385, yaw:280, tip:'太白以东秦岭最高点（DEM 实测约 2999 m）：凌晨出发拍日出云海，广角收群山层线；索道上站后徒步；保暖与高反预案'}
   ]},
 
  {id:2, name:'太平国家森林公园', region:'西安市鄠邑区 · 太平峪（主景区）', lon:108.6529, lat:33.9129, alt:'880–3000 m',
@@ -120,15 +127,15 @@ var SPOTS = [
    {n:'桦林湾·秦岭梁', lon:108.6590, lat:33.9020, tip:'秋季桦林金黄；西上秦岭梁可接冰晶顶徒步线'}
   ]},
 
- {id:3, name:'圭峰山', region:'鄠邑区 · 太平峪与乌桑峪之间（山顶参考点）', lon:108.6180, lat:34.0080, alt:'约 1528 m',
+ {id:3, name:'圭峰山', region:'鄠邑区 · 太平峪与乌桑峪之间（山顶参考点）', lon:108.6004, lat:33.9850, alt:'约 1528 m',
   cat:'leaf', themes:['leaf','cloud'], pos:true, win:'10月下旬–11月上旬 红叶；山顶日落',
   tips:['西安最经典红叶山（圭峰夜月）：登顶拍日落 + 关中平原夜景机位',
         '北坡观景台：下午侧光拍层林尽染，中长焦压缩色块',
         '徒步强度中等，山顶风大注意器材防风'],
   subs:[
-   {n:'登山口（乌桑峪）', lon:108.6280, lat:34.0280, tip:'环山路太平峪口西侧进乌桑峪，徒步上撤同线'},
-   {n:'北坡观景台', lon:108.6220, lat:34.0160, tip:'下午侧光拍红叶层林，中长焦压缩'},
-   {n:'山顶（日落机位）', lon:108.6180, lat:34.0080, tip:'日落 + 关中平原夜景；风大注意三脚架稳定'}
+   {n:'登山口（乌桑峪）', lon:108.6080, lat:34.0180, tip:'环山路太平峪口西侧进乌桑峪，徒步上撤同线'},
+   {n:'北坡观景台', lon:108.6020, lat:33.9920, tip:'下午侧光拍红叶层林，中长焦压缩'},
+   {n:'山顶（日落机位）', lon:108.6004, lat:33.9850, yaw:262, tip:'约 1528 m（DEM 1637）：日落 + 关中平原夜景；风大注意三脚架稳定'}
   ]},
 
  {id:4, name:'翠华山', region:'西安市长安区 · 太乙宫镇', lon:108.9940, lat:33.9830, alt:'天池约 1100 m 起',
@@ -151,7 +158,7 @@ var SPOTS = [
         '摸黑上山备头灯，山门后有摆渡'],
   subs:[
    {n:'山门（五台古镇）', lon:108.9500, lat:33.9730, tip:'早到占摆渡；摸黑上山备头灯'},
-   {n:'灵应台（日出机位）', lon:108.9430, lat:33.9520, tip:'西南角经典云海日出机位，秋冬清晨守雾海'},
+   {n:'灵应台（日出机位）', lon:108.9430, lat:33.9520, yaw:92, tip:'西南角经典云海日出机位，秋冬清晨守雾海'},
    {n:'观音台（1688 m）', lon:108.9370, lat:33.9470, tip:'日出后顺光拍秦岭层峦，山脊线串联'}
   ]},
 
@@ -178,7 +185,7 @@ var SPOTS = [
    {n:'天圆地方（3511 m）', lon:107.7830, lat:33.9660, tip:'索道上站云海机位；6月杜鹃+六月雪'},
    {n:'小文公庙', lon:107.7760, lat:33.9630, tip:'进入保护区徒步段起点'},
    {n:'大文公庙（宿营）', lon:107.7700, lat:33.9610, tip:'扎营点，凌晨冲大爷海看日出'},
-   {n:'大爷海（机位）', lon:107.7580, lat:33.9600, tip:'3590 m：西岸拍拔仙台日出剪影 + 湖面倒影'},
+   {n:'大爷海（机位）', lon:107.7580, lat:33.9600, yaw:118, tip:'3590 m：西岸拍拔仙台日出剪影 + 湖面倒影'},
    {n:'拔仙台（3771 m·机位）', lon:107.7660, lat:33.9540, tip:'秦岭主峰日出云海广角'}
   ]},
 
@@ -192,9 +199,9 @@ var SPOTS = [
    {n:'玉泉院·夜爬口', lon:110.0870, lat:34.4880, tip:'自古华山一条路：夜爬经典入口'},
    {n:'北峰（云台峰）', lon:110.0880, lat:34.4850, tip:'智取华山路 / 北峰索道'},
    {n:'苍龙岭', lon:110.0930, lat:34.4830, tip:'险脊斜阳，长焦压缩'},
-   {n:'东峰（日出机位）', lon:110.1000, lat:34.4800, tip:'鹞子翻身方向经典日出位'},
+   {n:'东峰（日出机位）', lon:110.1000, lat:34.4800, yaw:95, tip:'鹞子翻身方向经典日出位'},
    {n:'南峰·长空栈道', lon:110.0920, lat:34.4730, tip:'最高峰 2154 m；栈道俯拍'},
-   {n:'西峰（日落机位）', lon:110.0850, lat:34.4770, tip:'莲花峰西北角落日 + 苍龙岭斜阳'}
+   {n:'西峰（日落机位）', lon:110.0850, lat:34.4770, yaw:262, tip:'莲花峰西北角落日 + 苍龙岭斜阳'}
   ]},
 
  {id:9, name:'少华山国家森林公园', region:'渭南市华州区 · 莲花寺镇（主门区）', lon:109.5480, lat:34.3680, alt:'600–2491 m',
@@ -235,6 +242,25 @@ function coordTxt(lat, lon){ return lat.toFixed(4) + ', ' + lon.toFixed(4); }
 function amapLink(s){ return 'https://uri.amap.com/search?keyword=' + encodeURIComponent(s.name.replace(/（.*?）/g,'')); }
 function copyBtn(t){ return '<button data-cp="' + t + '">复制坐标</button>'; }
 
+/* 人视模拟辅助：两点方位角 / 机位默认朝向（看向游览线的下一站）/ 全景点清单 */
+function bearingDeg(la1, lo1, la2, lo2){
+  var y = Math.sin((lo2-lo1)*Math.PI/180) * Math.cos(la2*Math.PI/180);
+  var x = Math.cos(la1*Math.PI/180)*Math.sin(la2*Math.PI/180) - Math.sin(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.cos((lo2-lo1)*Math.PI/180);
+  return Math.atan2(y,x)*180/Math.PI;
+}
+function subDefaultYaw(s, u){
+  var i = s.subs.indexOf(u), t = s.subs[i+1] || s.subs[i-1];
+  return t ? (bearingDeg(u.lat, u.lon, t.lat, t.lon) + 360) % 360 : 0;
+}
+function allTargets(){
+  var a = [];
+  SPOTS.forEach(function(s){
+    a.push({name:s.name, lat:s.lat, lon:s.lon});
+    s.subs.forEach(function(u){ a.push({name:u.n, lat:u.lat, lon:u.lon}); });
+  });
+  return a;
+}
+
 function parkPopup(s){
   var h = '<div class="pp-name">' + s.name + (s.g5 ? '<span class="badge b5a">5A</span>' : '') + '</div>'
     + '<div class="pp-region">' + s.region + (s.alt ? ' · ' + s.alt : '') + '</div>'
@@ -249,10 +275,12 @@ function parkPopup(s){
   return h;
 }
 function subPopup(s, u){
+  var yaw = u.yaw != null ? u.yaw : subDefaultYaw(s, u);
   return '<div class="pp-name" style="font-size:14px">' + u.n + '</div>'
     + '<div class="pp-region">' + s.name + ' · 小景点/机位</div>'
     + '<div class="pp-coord"><span>' + coordTxt(u.lat, u.lon) + '</span>' + copyBtn(coordTxt(u.lat, u.lon)) + '</div>'
     + '<div class="pp-row"><b class="k">机位要点</b>　' + u.tip + '</div>'
+    + '<div style="margin:7px 0 4px"><button class="p3dopen" data-lat="' + u.lat + '" data-lon="' + u.lon + '" data-name="' + u.n + '" data-yaw="' + yaw.toFixed(0) + '">👁 人视模拟 · 环顾山形</button></div>'
     + '<div class="pp-links"><a href="https://cn.bing.com/maps?q=' + coordTxt(u.lat, u.lon) + '" target="_blank" rel="noopener">Bing 卫星对照 →</a></div>';
 }
 
@@ -340,8 +368,12 @@ function buildList(){
       var subs = document.createElement('div'); subs.className = 'subs'; subs.style.setProperty('--sc', CAT[s.cat].color);
       s.subs.forEach(function(u){
         var r = document.createElement('div'); r.className = 'subrow';
-        r.innerHTML = '<div class="sn">' + u.n + '</div><div class="st">' + u.tip + '</div>';
+        var yw = u.yaw != null ? u.yaw : subDefaultYaw(s, u);
+        r.innerHTML = '<div class="sn">' + u.n
+          + '<button class="p3dopen" title="人视模拟：站在机位环顾真实山形" data-lat="' + u.lat + '" data-lon="' + u.lon + '" data-name="' + u.n + '" data-yaw="' + yw.toFixed(0) + '">👁 人视</button></div>'
+          + '<div class="st">' + u.tip + '</div>';
         r.onclick = function(ev){
+          if (ev.target.closest && ev.target.closest('.p3dopen')) return; /* 按钮走人视模拟委托 */
           ev.stopPropagation();
           map.flyTo([u.lat, u.lon], Math.max(map.getZoom(), 13), {duration:.8});
           subLayers[s.id].addTo(map);
@@ -381,6 +413,20 @@ document.addEventListener('click', function(e){
   function done(){ b.textContent = '已复制'; setTimeout(function(){ b.textContent = '复制坐标'; }, 1400); }
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, done);
   else { var ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(x){} document.body.removeChild(ta); done(); }
+});
+
+/* 人视模拟（事件委托，渲染逻辑在 js/qinling/pano.js，不侵入地图主流程） */
+document.addEventListener('click', function(e){
+  var b = e.target.closest ? e.target.closest('.p3dopen') : null;
+  if (!b) return;
+  if (!window.QIN || !QIN.pano) return;
+  map.closePopup();
+  QIN.pano.open({
+    name: b.getAttribute('data-name'),
+    lat: +b.getAttribute('data-lat'), lon: +b.getAttribute('data-lon'),
+    yaw: +b.getAttribute('data-yaw') || 0,
+    targets: allTargets()
+  });
 });
 </script>
 </body>
