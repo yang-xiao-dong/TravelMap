@@ -63,6 +63,7 @@ aside h2{font-size:13px;color:var(--sub);font-weight:600;margin:4px 0 8px;letter
 .pp-name{font-size:15px;font-weight:700}
 .pp-region{color:var(--sub);font-size:12px;margin:2px 0 6px}
 .pp-note{background:#fdf3e7;border:1px solid #f3ddc0;border-radius:6px;padding:5px 9px;font-size:12px;margin:5px 0;color:#7a5200}
+.pp-story{background:#f6f1e4;border-left:3px solid #8a5a00;border-radius:0 6px 6px 0;padding:5px 9px;font-size:12px;margin:5px 0;color:#5c4a1a;line-height:1.55}
 .pp-row{font-size:12.5px;margin:3px 0}
 .pp-row b.k{color:var(--sub);font-weight:600}
 .pp-coord{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:6px;padding:4px 8px;margin:6px 0;font-variant-numeric:tabular-nums}
@@ -140,6 +141,7 @@ function allTargets(){
 function parkPopup(s){
   var h = '<div class="pp-name">' + s.name + (s.g5 ? '<span class="badge b5a">5A</span>' : '') + (s.np ? '<span class="badge bnp">国家公园</span>' : '') + '</div>'
     + '<div class="pp-region">' + s.region + (s.alt ? ' · ' + s.alt : '') + '</div>'
+    + (s.story ? '<div class="pp-story">' + s.story + '</div>' : '')
     + (s.note ? '<div class="pp-note">' + s.note + '</div>' : '')
     + '<div class="pp-row"><b class="k">最佳窗口</b>　' + s.win + '</div>'
     + '<div class="pp-row"><b class="k">题材</b>　' + s.themes.map(function(t){return CAT[t].label;}).join(' / ') + '</div>'
@@ -337,6 +339,7 @@ STD_CATS = {
     "cloud": {"label": u"云海日出·星空", "color": "#7048e8"},
     "lake":  {"label": u"峡谷水体·地质", "color": "#2f9e44"},
     "bird":  {"label": u"冬季候鸟", "color": "#1c7ed6"},
+    "culture": {"label": u"人文史迹·同框", "color": "#8a5a00"},
 }
 
 def main(path):
@@ -345,7 +348,7 @@ def main(path):
     for k, v in (d.get('cat_extra') or {}).items():
         cats[k] = v
     # 白名单字段（多余的 coord_confidence 等调试字段不进页面）
-    keep_spot = ('id','name','region','lon','lat','alt','g5','np','cat','themes','win','note','tips','subs')
+    keep_spot = ('id','name','region','lon','lat','alt','g5','np','cat','themes','win','note','tips','story','subs')
     keep_sub = ('n','lon','lat','yaw','tip')
     spots = []
     for s in d['spots']:

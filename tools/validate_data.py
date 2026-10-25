@@ -2,7 +2,7 @@
 """采风数据契约校验：坐标缺失/越界、cat 非法、字段类型，输出坏行。"""
 import json, io, sys
 
-STD = {'bloom', 'fall', 'leaf', 'cloud', 'lake', 'bird'}
+STD = {'bloom', 'fall', 'leaf', 'cloud', 'lake', 'bird', 'culture'}
 
 def ok_num(v):
     return isinstance(v, (int, float)) and -180 <= v <= 180
