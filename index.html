@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>采风规划中心 · 秦岭 / 湖北 / 河南</title>
+<title>采风规划中心 · 全国</title>
+<link rel="stylesheet" href="lib/leaflet.css">
 <style>
 :root{
   --ink:#22304a; --sub:#64748b; --line:#e2e8f0; --bg:#f6f8fb; --accent:#1f5fa8;
@@ -59,6 +60,18 @@ td.m{font-weight:700;white-space:nowrap;color:var(--sub);background:#fafbfd}
 td.m.cur{color:#fff;background:var(--accent)}
 .foot{font-size:11.5px;color:var(--sub);line-height:1.8}
 .foot b{color:var(--ink)}
+.allmap{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:22px}
+.allmap h2{font-size:13px;letter-spacing:2px;color:var(--sub);margin-bottom:10px}
+.allmap h2 b{color:var(--accent)}
+.am-bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.am-bar select{font-size:13px;padding:4px 8px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink);max-width:200px}
+.chips2{display:flex;gap:5px;flex-wrap:wrap}
+.chips2 span{font-size:11.5px;padding:2px 9px;border:1px solid var(--line);border-radius:999px;cursor:pointer;background:#fff;user-select:none}
+.chips2 span.on{color:#fff;border-color:transparent}
+.am-tog{font-size:12px;color:var(--sub);display:flex;align-items:center;gap:4px;cursor:pointer}
+#allmap{height:560px;border-radius:10px;border:1px solid var(--line);background:#dfe6ee}
+.plabel{font:700 13px/1 "PingFang SC","Microsoft YaHei",sans-serif;color:#22304a;text-shadow:0 0 3px #fff,0 0 5px #fff,0 0 8px #fff;white-space:nowrap;pointer-events:none}
+.leaflet-popup-content{font-size:13px;line-height:1.55;margin:10px 14px;min-width:210px}
 @media (max-width:760px){.row-now{grid-template-columns:60px 1fr}}
 </style>
 </head>
@@ -305,6 +318,18 @@ td.m.cur{color:#fff;background:var(--accent)}
     </a>
   </div>
 
+  <div class="allmap">
+    <h2>🗺 全国采风总览 · <b id="am-count">—</b> 个景区按真实坐标分布 · 按省份/题材筛选 · 点击查看详情并直达省专题</h2>
+    <div class="am-bar">
+      <select id="am-prov"><option value="all">全部省份（32）</option></select>
+      <div class="chips2" id="am-cats"></div>
+      <label class="am-tog"><input type="checkbox" id="am-5a"> 只看 5A</label>
+      <label class="am-tog"><input type="checkbox" id="am-np"> 含国家公园</label>
+      <label class="am-tog"><input type="checkbox" id="am-cu"> 人文同框</label>
+    </div>
+    <div id="allmap"></div>
+  </div>
+
   <div class="cal">
     <h2>📅 12 月轮拍日历（当前月份自动高亮）</h2>
     <table>
@@ -318,6 +343,82 @@ td.m.cur{color:#fff;background:var(--accent)}
   </div>
 </div>
 
+<script src="lib/leaflet.js"></script>
+<script src="data/all.js"></script>
+<script>
+/* ---------- 全国采风总览图 ---------- */
+var AM_CAT = {
+  bloom:{label:'花海', color:'#d6336c'}, fall:{label:'瀑布溪流', color:'#0e9aa7'},
+  leaf:{label:'红叶秋色', color:'#e8590c'}, cloud:{label:'云海日出星空', color:'#7048e8'},
+  lake:{label:'峡谷水体地质', color:'#2f9e44'}, bird:{label:'候鸟', color:'#1c7ed6'},
+  culture:{label:'人文史迹', color:'#8a5a00'}
+};
+var am = L.map('allmap', { minZoom:4, maxZoom:12 }).setView([35.5, 105], 4);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  { maxZoom:12, attribution:'影像 © Esri' }).addTo(am);
+var amLayer = L.layerGroup().addTo(am), amLabels = L.layerGroup().addTo(am);
+var amF = { prov:'all', cat:'all', f5a:false, np:false, cu:false };
+var amProvSel = document.getElementById('am-prov');
+(function () {
+  var ps = {}; ALL.forEach(function (s) { ps[s.pl] = (ps[s.pl] || 0) + 1; });
+  Object.keys(ps).sort(function (a, b) { return a.localeCompare(b, 'zh'); }).forEach(function (k) {
+    var o = document.createElement('option'); o.value = k; o.textContent = k + '（' + ps[k] + '）';
+    amProvSel.appendChild(o);
+  });
+  amProvSel.onchange = function () { amF.prov = amProvSel.value; amRender(); };
+  var box = document.getElementById('am-cats');
+  [['all','全部']].concat(Object.keys(AM_CAT).map(function (k) { return [k, AM_CAT[k].label]; })).forEach(function (p, i) {
+    var d = document.createElement('span');
+    d.className = i === 0 ? 'on' : '';
+    d.textContent = p[1];
+    d.onclick = function () {
+      box.querySelectorAll('span').forEach(function (x) { x.className = ''; });
+      d.className = 'on';
+      amF.cat = p[0]; amRender();
+    };
+    box.appendChild(d);
+  });
+  ['am-5a','am-np','am-cu'].forEach(function (id) {
+    var el = document.getElementById(id);
+    el.onchange = function () {
+      amF.f5a = document.getElementById('am-5a').checked;
+      amF.np = document.getElementById('am-np').checked;
+      amF.cu = document.getElementById('am-cu').checked;
+      amRender();
+    };
+  });
+})();
+function amRender() {
+  amLayer.clearLayers(); amLabels.clearLayers();
+  var shown = 0, centers = {};
+  ALL.forEach(function (s) {
+    if (amF.prov !== 'all' && s.pl !== amF.prov) return;
+    if (amF.cat !== 'all' && s.cat !== amF.cat && s.th.indexOf(amF.cat) < 0) return;
+    if (amF.f5a && !s.g5) return;
+    if (amF.np && !s.np) return;
+    if (amF.cu && !s.cu) return;
+    shown++;
+    var c = AM_CAT[s.cat] ? AM_CAT[s.cat].color : '#666';
+    var di = L.divIcon({ className:'', iconSize:[10,10], iconAnchor:[5,5],
+      html:'<div style="width:10px;height:10px;border-radius:50%;background:'+c+';opacity:.88;box-shadow:0 0 0 1.6px #fff"></div>' });
+    L.marker([s.lat, s.lon], {icon:di}).addTo(amLayer).bindPopup(
+      '<b>' + s.n + '</b>' + (s.g5 ? ' <span style="background:#fff4d6;color:#a06b00;font-size:10px;padding:0 4px;border-radius:3px;border:1px solid #f0d48a">5A</span>' : '')
+      + (s.np ? ' <span style="background:#e5f0ff;color:#1f5fa8;font-size:10px;padding:0 4px;border-radius:3px;border:1px solid #bcd4f0">国家公园</span>' : '')
+      + '<br><span style="color:#64748b">' + s.pl + ' · ' + s.win + '</span>'
+      + '<br><a href="' + s.page + '" style="color:#1f5fa8">进入' + s.pl + '专题 →</a>');
+    if (!centers[s.pl]) centers[s.pl] = { n:0, x:0, y:0 };
+    centers[s.pl].n++; centers[s.pl].x += s.lon; centers[s.pl].y += s.lat;
+  });
+  Object.keys(centers).forEach(function (k) {
+    var v = centers[k];
+    if (v.n < 3) return;
+    var di = L.divIcon({ className:'', iconSize:[60,14], iconAnchor:[30,7], html:'<div class="plabel">' + k + '</div>' });
+    L.marker([v.y / v.n, v.x / v.n], {icon:di, interactive:false}).addTo(amLabels);
+  });
+  document.getElementById('am-count').textContent = shown;
+}
+amRender();
+</script>
 <script>
 /* ---------- 当季看板数据（按月） ---------- */
 var NOW = {
