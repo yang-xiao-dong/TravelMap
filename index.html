@@ -71,6 +71,8 @@ td.m.cur{color:#fff;background:var(--accent)}
 .am-tog{font-size:12px;color:var(--sub);display:flex;align-items:center;gap:4px;cursor:pointer}
 #allmap{height:560px;border-radius:10px;border:1px solid var(--line);background:#dfe6ee}
 .plabel{font:700 13px/1 "PingFang SC","Microsoft YaHei",sans-serif;color:#22304a;text-shadow:0 0 3px #fff,0 0 5px #fff,0 0 8px #fff;white-space:nowrap;pointer-events:none}
+.slabel{background:transparent!important;border:none!important;box-shadow:none!important;font:600 11px "PingFang SC","Microsoft YaHei",sans-serif;color:#22304a;text-shadow:0 0 3px #fff,0 0 5px #fff,0 0 7px #fff;padding:0;margin:0 0 0 3px!important}
+.leaflet-tooltip.slabel::before{display:none}
 .leaflet-popup-content{font-size:13px;line-height:1.55;margin:10px 14px;min-width:210px}
 @media (max-width:760px){.row-now{grid-template-columns:60px 1fr}}
 </style>
@@ -390,6 +392,7 @@ var amProvSel = document.getElementById('am-prov');
 })();
 function amRender() {
   amLayer.clearLayers(); amLabels.clearLayers();
+  amMarks = [];
   var shown = 0, centers = {};
   ALL.forEach(function (s) {
     if (amF.prov !== 'all' && s.pl !== amF.prov) return;
@@ -401,11 +404,13 @@ function amRender() {
     var c = AM_CAT[s.cat] ? AM_CAT[s.cat].color : '#666';
     var di = L.divIcon({ className:'', iconSize:[10,10], iconAnchor:[5,5],
       html:'<div style="width:10px;height:10px;border-radius:50%;background:'+c+';opacity:.88;box-shadow:0 0 0 1.6px #fff"></div>' });
-    L.marker([s.lat, s.lon], {icon:di}).addTo(amLayer).bindPopup(
+    var _m = L.marker([s.lat, s.lon], {icon:di}).addTo(amLayer).bindPopup(
       '<b>' + s.n + '</b>' + (s.g5 ? ' <span style="background:#fff4d6;color:#a06b00;font-size:10px;padding:0 4px;border-radius:3px;border:1px solid #f0d48a">5A</span>' : '')
       + (s.np ? ' <span style="background:#e5f0ff;color:#1f5fa8;font-size:10px;padding:0 4px;border-radius:3px;border:1px solid #bcd4f0">国家公园</span>' : '')
       + '<br><span style="color:#64748b">' + s.pl + ' · ' + s.win + '</span>'
       + '<br><a href="' + s.page + '" style="color:#1f5fa8">进入' + s.pl + '专题 →</a>');
+    _m.bindTooltip(s.n, {direction:'right', className:'slabel', offset:[7,-5]});
+    amMarks.push(_m);
     if (!centers[s.pl]) centers[s.pl] = { n:0, x:0, y:0 };
     centers[s.pl].n++; centers[s.pl].x += s.lon; centers[s.pl].y += s.lat;
   });
@@ -416,7 +421,19 @@ function amRender() {
     L.marker([v.y / v.n, v.x / v.n], {icon:di, interactive:false}).addTo(amLabels);
   });
   document.getElementById('am-count').textContent = shown;
+  amSyncTips();
 }
+var amMarks = [];
+function amSyncTips() {
+  var z = am.getZoom();
+  if (z < 6) { amMarks.forEach(function (m) { m.closeTooltip(); }); return; }
+  var b = am.getBounds().pad(-0.05);
+  amMarks.forEach(function (m) {
+    if (b.contains(m.getLatLng())) m.openTooltip(); else m.closeTooltip();
+  });
+}
+am.on('zoomend', amSyncTips);
+am.on('moveend', amSyncTips);
 amRender();
 </script>
 <script>

@@ -78,6 +78,8 @@ aside h2{font-size:13px;color:var(--sub);font-weight:600;margin:4px 0 8px;letter
 .p3dopen{border:1px solid var(--accent);background:#fff;color:var(--accent);font-size:12px;border-radius:6px;padding:2px 10px;cursor:pointer}
 .p3dopen:hover{background:var(--accent);color:#fff}
 .subrow .sn .p3dopen{float:right;font-size:11px;padding:0 7px;line-height:19px;border-radius:5px}
+.slabel{background:transparent!important;border:none!important;box-shadow:none!important;font:600 11px "PingFang SC","Microsoft YaHei",sans-serif;color:#22304a;text-shadow:0 0 3px #fff,0 0 5px #fff,0 0 7px #fff;padding:0;margin:0 0 0 4px!important}
+.leaflet-tooltip.slabel::before{display:none}
 @media (max-width:760px){.layout{grid-template-columns:1fr;grid-template-rows:auto 34vh 1fr}aside{border-right:none;border-bottom:1px solid var(--line)}}
 </style>
 </head>
@@ -177,12 +179,15 @@ function localPopup(u){
     + '<div class="pp-row" style="line-height:1.55">' + u.tip + '</div>';
 }
 var markers = {}, subLayers = {}, stayLayer = L.layerGroup(), localLayer = L.layerGroup();
+var tipSubs = [];   /* 自动标注：公园名 z≥8，机位名 z≥12 */
 SPOTS.forEach(function(s){
   var c = CAT[s.cat].color;
   var icon = L.divIcon({ className:'', iconSize:[24,24], iconAnchor:[12,12], popupAnchor:[0,-12],
     html:'<div style="width:24px;height:24px;border-radius:50%;background:'+c+';color:#fff;font:700 12px/24px PingFang SC,Microsoft YaHei,sans-serif;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.45),0 0 0 2.5px #fff">' + s.id + '</div>' });
   markers[s.id] = L.marker([s.lat, s.lon], {icon:icon, title:s.name}).addTo(map)
-    .bindPopup(parkPopup(s), {maxWidth:295});
+    .bindPopup(parkPopup(s), {maxWidth:295})
+    .bindTooltip(s.name, {direction:'right', className:'slabel', offset:[8,-6]});
+  tipSubs.push(markers[s.id]);
   var g = L.layerGroup();
   var line = s.subs.map(function(u){ return [u.lat, u.lon]; });
   L.polyline(line, {color:c, weight:2.5, opacity:.8, dashArray:'6 7'})
@@ -190,8 +195,10 @@ SPOTS.forEach(function(s){
   s.subs.forEach(function(u){
     var di = L.divIcon({ className:'', iconSize:[15,15], iconAnchor:[7.5,7.5], popupAnchor:[0,-8],
       html:'<div style="width:15px;height:15px;border-radius:50%;background:'+c+';opacity:.92;box-shadow:0 0 0 2px #fff,0 1px 3px rgba(0,0,0,.4)"></div>' });
-    L.marker([u.lat, u.lon], {icon:di, title:u.n}).addTo(g)
-      .bindPopup(subPopup(s, u), {maxWidth:280});
+    var _m = L.marker([u.lat, u.lon], {icon:di, title:u.n}).addTo(g)
+      .bindPopup(subPopup(s, u), {maxWidth:280})
+      .bindTooltip(u.n, {direction:'right', className:'slabel', offset:[7,-5]});
+    tipSubs.push(_m);
   });
   subLayers[s.id] = g;
 });
@@ -226,6 +233,15 @@ function syncSubLayers(){
   });
 }
 map.on('zoomend', syncSubLayers);
+function syncTips(){
+  var z = map.getZoom();
+  tipSubs.forEach(function(m){
+    var isSub = m.getIcon && m.getIcon().options.iconSize && m.getIcon().options.iconSize[0] <= 15;
+    var want = z >= (isSub ? 12 : 8);
+    if (want && map.hasLayer(m)) m.openTooltip(); else m.closeTooltip();
+  });
+}
+map.on('zoomend', syncTips);
 
 var curFilter = 'all';
 var chipsEl = document.getElementById('chips');

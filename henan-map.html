@@ -68,6 +68,9 @@ aside h2{font-size:13px;color:var(--sub);font-weight:600;margin:4px 0 8px;letter
 .p3dopen{border:1px solid var(--accent);background:#fff;color:var(--accent);font-size:12px;border-radius:6px;padding:2px 10px;cursor:pointer}
 .p3dopen:hover{background:var(--accent);color:#fff}
 .subrow .sn .p3dopen{float:right;font-size:11px;padding:0 7px;line-height:19px;border-radius:5px}
+.slabel{background:transparent!important;border:none!important;box-shadow:none!important;font:600 11px "PingFang SC","Microsoft YaHei",sans-serif;color:#22304a;text-shadow:0 0 3px #fff,0 0 5px #fff,0 0 7px #fff;padding:0;margin:0 0 0 4px!important}
+.leaflet-tooltip.slabel::before{display:none}
+
 @media (max-width:760px){.layout{grid-template-columns:1fr;grid-template-rows:auto 34vh 1fr}aside{border-right:none;border-bottom:1px solid var(--line)}}
 </style>
 </head>
@@ -356,6 +359,29 @@ function syncSubLayers(){
   });
 }
 map.on('zoomend', syncSubLayers);
+var tipSubs = [];
+SPOTS.forEach(function(s){
+  markers[s.id].bindTooltip(s.name, {direction:'right', className:'slabel', offset:[8,-6]});
+  tipSubs.push(markers[s.id]);
+  s.subs.forEach(function(u){
+    subLayers[s.id].eachLayer(function(ly){
+      if (ly.getLatLng && Math.abs(ly.getLatLng().lat - u.lat) < 1e-6 && ly.getTooltip === undefined && !ly._tipDone) {
+        ly._tipDone = true;
+        ly.bindTooltip(u.n, {direction:'right', className:'slabel', offset:[7,-5]});
+        tipSubs.push(ly);
+      }
+    });
+  });
+});
+function syncTips(){
+  var z = map.getZoom();
+  tipSubs.forEach(function(m){
+    var isSub = m.getIcon && m.getIcon().options.iconSize && m.getIcon().options.iconSize[0] <= 15;
+    var want = z >= (isSub ? 12 : 8);
+    if (want && map.hasLayer(m)) m.openTooltip(); else m.closeTooltip();
+  });
+}
+map.on('zoomend', syncTips);
 
 /* ---------- 侧栏（景区可展开小景点） ---------- */
 var curFilter = 'all';
