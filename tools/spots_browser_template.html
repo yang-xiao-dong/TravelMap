@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>全国采风景点 · 检索</title>
+<style>
+:root{
+  --bg:#fafbfd; --card:#fff; --line:#e3e8f0; --ink:#22303f; --mut:#6b7a90;
+  --acc:#4263eb; --accsoft:#f0f6ff; --mark:#fff4d6; --shadow:0 1px 3px rgba(34,48,63,.07);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:15px/1.65 "PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif}
+a{color:var(--acc);text-decoration:none}
+a:hover{text-decoration:underline}
+button{font:inherit;cursor:pointer}
+
+/* ---- 顶栏 ---- */
+header{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:18px;padding:12px 22px;flex-wrap:wrap}
+header h1{font-size:19px;margin:0;white-space:nowrap}
+header h1 b{color:var(--acc)}
+header .stats{color:var(--mut);font-size:13px}
+#q{flex:1;min-width:220px;max-width:560px;border:1px solid var(--line);border-radius:9px;
+  padding:9px 14px;font-size:15px;background:var(--bg);outline:none}
+#q:focus{border-color:var(--acc);background:#fff;box-shadow:0 0 0 3px rgba(66,99,235,.12)}
+#q::placeholder{color:#9aa7ba}
+
+/* ---- 布局 ---- */
+.wrap{display:flex;gap:20px;max-width:1380px;margin:0 auto;padding:18px 22px 60px}
+aside{width:248px;flex:none;position:sticky;top:72px;max-height:calc(100vh - 90px);
+  overflow:auto;padding-right:4px}
+aside h3{font-size:13px;color:var(--mut);margin:16px 0 8px;font-weight:600;
+  letter-spacing:.05em}
+aside h3:first-child{margin-top:2px}
+main{flex:1;min-width:0}
+
+/* ---- 筛选件 ---- */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;
+  padding:3px 11px;font-size:13px;color:var(--ink)}
+.chip small{color:var(--mut);margin-left:3px}
+.chip:hover{border-color:var(--acc)}
+.chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.chip.on small{color:#dbe4ff}
+#reset{margin-top:14px;border:none;background:none;color:var(--mut);font-size:13px;
+  padding:4px 0;text-decoration:underline}
+
+/* ---- 状态条 ---- */
+.status{display:flex;align-items:baseline;gap:12px;margin:2px 0 14px;flex-wrap:wrap}
+.status b{font-size:16px}
+.status span{color:var(--mut);font-size:13px}
+
+/* ---- 省份速览卡 ---- */
+.overview{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden}
+.overview>summary{cursor:pointer;padding:12px 18px;font-weight:600;list-style:none;
+  display:flex;justify-content:space-between;align-items:center}
+.overview>summary::after{content:"展开 ▾";color:var(--mut);font-size:12px;font-weight:400}
+.overview[open]>summary::after{content:"收起 ▴"}
+.ov-body{padding:0 18px 16px}
+.ov-body h4{font-size:13px;color:var(--mut);margin:12px 0 6px}
+.ov-body ul{margin:0;padding-left:20px}
+.ov-body li{margin:2px 0;font-size:14px}
+table.grid{width:100%;border-collapse:collapse;font-size:13.5px;margin:4px 0}
+table.grid th{background:var(--accsoft);text-align:left;font-weight:600}
+table.grid th,table.grid td{border:1px solid var(--line);padding:5px 9px;vertical-align:top}
+
+/* ---- 卡片 ---- */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  box-shadow:var(--shadow);padding:15px 17px;cursor:pointer;display:flex;
+  flex-direction:column;gap:7px;transition:border-color .15s, transform .15s}
+.card:hover{border-color:var(--acc);transform:translateY(-1px)}
+.card .t{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.card .t .nm{font-size:16.5px;font-weight:700}
+.card .t .pv{color:var(--mut);font-size:12.5px}
+.badge{font-size:11.5px;border-radius:5px;padding:1px 7px;background:var(--accsoft);
+  color:var(--acc);font-weight:600;white-space:nowrap}
+.badge.gold{background:#fff4d6;color:#9a6700}
+.meta{color:var(--mut);font-size:13px}
+.meta .th{color:var(--acc)}
+.win{font-size:13.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden}
+.snip{font-size:13px;color:var(--mut);background:var(--bg);border-radius:8px;
+  padding:7px 10px;border:1px dashed var(--line)}
+.snip b{color:var(--ink);font-weight:600;margin-right:6px}
+mark{background:var(--mark);padding:0 1px;border-radius:2px}
+.empty{padding:70px 0;text-align:center;color:var(--mut)}
+.empty .big{font-size:42px}
+
+/* ---- 详情弹层 ---- */
+#modal{position:fixed;inset:0;z-index:60;display:none;background:rgba(20,30,45,.48);
+  padding:26px 14px}
+#modal.open{display:flex;align-items:flex-start;justify-content:center;overflow:auto}
+.panel{background:#fff;border-radius:14px;max-width:880px;width:100%;
+  max-height:calc(100vh - 60px);overflow:auto;box-shadow:0 18px 60px rgba(15,23,42,.3)}
+.panel .ph{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);
+  padding:16px 26px 12px;display:flex;gap:14px;align-items:flex-start;z-index:2}
+.panel .ph .tt{flex:1}
+.panel .ph h2{margin:0;font-size:21px}
+.panel .ph .sub{color:var(--mut);font-size:13px;margin-top:4px}
+#close{border:1px solid var(--line);background:#fff;border-radius:8px;width:34px;
+  height:34px;font-size:16px;color:var(--mut);flex:none}
+#close:hover{border-color:var(--acc);color:var(--acc)}
+.panel .bd{padding:8px 26px 26px}
+.panel .win{background:var(--accsoft);border-radius:10px;padding:10px 15px;margin:14px 0 4px;
+  font-size:14px}
+.panel .win b{color:var(--acc)}
+.panel h3{font-size:15px;margin:22px 0 8px;padding-left:10px;border-left:4px solid var(--acc)}
+.panel p{margin:6px 0;font-size:14.5px}
+.panel ul{margin:6px 0;padding-left:22px}
+.panel li{margin:3px 0;font-size:14.5px}
+.panel .shots td,.panel .shots th{font-size:13.5px}
+.panel .mono{font-family:Consolas,Menlo,monospace;font-size:12.5px;color:var(--mut)}
+.panel .foot{margin-top:24px;padding-top:14px;border-top:1px dashed var(--line);
+  display:flex;gap:18px;font-size:14px;flex-wrap:wrap}
+
+@media (max-width:920px){
+  .wrap{flex-direction:column;padding:14px 12px 50px}
+  aside{width:auto;position:static;max-height:none}
+  header{padding:10px 14px;gap:10px}
+  .cards{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>全国采风景点 · <b>检索</b></h1>
+  <span class="stats" id="hstats"></span>
+  <input id="q" type="search" placeholder="搜索景区 / 风土 / 机位 / 节庆……（按 / 聚焦）" autocomplete="off">
+</header>
+<div class="wrap">
+  <aside id="side"></aside>
+  <main>
+    <div class="status" id="status"></div>
+    <div id="overview"></div>
+    <div class="cards" id="cards"></div>
+  </main>
+</div>
+<div id="modal"><div class="panel">
+  <div class="ph">
+    <div class="tt"><h2 id="m-name"></h2><div class="sub" id="m-sub"></div></div>
+    <button id="close" title="关闭 (Esc)">✕</button>
+  </div>
+  <div class="bd" id="m-body"></div>
+</div></div>
+
+<script>
+window.SPOTS_DOCS = __DATA__;
+</script>
+<script>
+(function(){
+'use strict';
+var D = window.SPOTS_DOCS;
+var ALL = [];
+D.provinces.forEach(function(p){ p.spots.forEach(function(s){ ALL.push({p:p, s:s}); }); });
+
+var state = { prov:null, themes:{}, months:{}, g5:false, q:'' };
+var $ = function(id){ return document.getElementById(id); };
+var esc = function(t){
+  return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+};
+var hl = function(t, q){
+  if(!q) return esc(t);
+  var i = t.toLowerCase().indexOf(q.toLowerCase());
+  if(i < 0) return esc(t);
+  return esc(t.slice(0, i)) + '<mark>' + esc(t.slice(i, i + q.length)) + '</mark>' + esc(t.slice(i + q.length));
+};
+
+/* ---------- 侧栏 ---------- */
+function themeCodes(){
+  var seen = {};
+  ALL.forEach(function(it){ it.s.themes.forEach(function(t){ seen[t] = (seen[t]||0)+1; }); });
+  var arr = Object.keys(seen).map(function(t){ return {t:t, n:seen[t]}; });
+  arr.sort(function(a,b){ return b.n - a.n; });
+  return arr;
+}
+function renderSide(){
+  var h = '<h3>区域</h3><div class="chips">' +
+    '<button class="chip' + (state.prov ? '' : ' on') + '" data-p="">全部 ' + ALL.length + '</button>' +
+    D.provinces.map(function(p){
+      return '<button class="chip' + (state.prov === p.key ? ' on' : '') +
+        '" data-p="' + p.key + '">' + esc(p.cn) + ' <small>' + p.spots.length + '</small></button>';
+    }).join('') + '</div>';
+  h += '<h3>主题（多选，取交集）</h3><div class="chips">' + themeCodes().map(function(o){
+    var lab = D.themeLabels[o.t] || o.t;
+    return '<button class="chip' + (state.themes[o.t] ? ' on' : '') + '" data-t="' + o.t +
+      '">' + esc(lab) + ' <small>' + o.n + '</small></button>';
+  }).join('') + '</div>';
+  h += '<h3>月份（取自最佳窗口）</h3><div class="chips">' +
+    [1,2,3,4,5,6,7,8,9,10,11,12].map(function(m){
+      return '<button class="chip' + (state.months[m] ? ' on' : '') + '" data-m="' + m +
+        '">' + m + '月</button>';
+    }).join('') + '</div>';
+  h += '<h3>资质</h3><div class="chips"><button class="chip' + (state.g5 ? ' on' : '') +
+    '" data-g="1">仅 5A</button></div>';
+  h += '<button id="reset">重置全部筛选</button>';
+  $('side').innerHTML = h;
+  $('side').querySelectorAll('[data-p]').forEach(function(b){
+    b.onclick = function(){ state.prov = b.dataset.p || null; refresh(); };
+  });
+  $('side').querySelectorAll('[data-t]').forEach(function(b){
+    b.onclick = function(){
+      var t = b.dataset.t;
+      state.themes[t] = !state.themes[t];
+      refresh();
+    };
+  });
+  $('side').querySelectorAll('[data-m]').forEach(function(b){
+    b.onclick = function(){
+      var m = +b.dataset.m;
+      state.months[m] = !state.months[m];
+      refresh();
+    };
+  });
+  var g = $('side').querySelector('[data-g]');
+  if(g) g.onclick = function(){ state.g5 = !state.g5; refresh(); };
+  $('reset').onclick = function(){
+    state = { prov:null, themes:{}, months:{}, g5:false, q:state.q };
+    $('q').value = state.q;
+    refresh();
+  };
+}
+
+/* ---------- 过滤 ---------- */
+function match(it){
+  var s = it.s;
+  if(state.prov && it.p.key !== state.prov) return false;
+  for(var t in state.themes){ if(state.themes[t] && s.themes.indexOf(t) < 0) return false; }
+  var anyMonth = false;
+  for(var m in state.months){ if(state.months[m]) anyMonth = true; }
+  if(anyMonth){
+    var ok = false;
+    for(var m2 in state.months){ if(state.months[m2] && s.months.indexOf(+m2) >= 0) ok = true; }
+    if(!ok) return false;
+  }
+  if(state.g5 && s.badges.indexOf('5A') < 0) return false;
+  if(state.q && s.blob.toLowerCase().indexOf(state.q.toLowerCase()) < 0) return false;
+  return true;
+}
+function snippet(s, q){
+  if(!q) return null;
+  var fields = [
+    ['名称', s.name], ['窗口', s.win],
+    ['文化历史', s.hist.join(' ')], ['风土人情', s.folk.join(' ')],
+    ['机位', s.shots.map(function(x){ return x.n + ' ' + x.tip; }).join(' ')],
+    ['地方特色', s.feat.join(' ')], ['实用提示', s.note.join(' ')]
+  ];
+  var ql = q.toLowerCase();
+  for(var i = 0; i < fields.length; i++){
+    var t = fields[i][1], at = t.toLowerCase().indexOf(ql);
+    if(at >= 0){
+      var a = Math.max(0, at - 34), b = Math.min(t.length, at + q.length + 60);
+      return '<b>' + fields[i][0] + '</b>' + (a > 0 ? '…' : '') +
+        hl(t.slice(a, b), q) + (b < t.length ? '…' : '');
+    }
+  }
+  return null;
+}
+
+/* ---------- 主区 ---------- */
+function refresh(){
+  renderSide();
+  var hits = ALL.filter(match);
+  var nShots = hits.reduce(function(a, it){ return a + it.s.shots.length; }, 0);
+  $('status').innerHTML = '<b>' + hits.length + '</b> 景区 <span>· 含 ' + nShots +
+    ' 机位' + (state.q ? ' · 搜索“' + esc(state.q) + '”' : '') + '</span>';
+
+  var ov = '';
+  var prov = state.prov ? D.provinces.filter(function(p){ return p.key === state.prov; })[0] : null;
+  if(prov){
+    var body = '';
+    if(prov.calendar.length){
+      body += '<h4>季节日历</h4><ul>' + prov.calendar.map(function(x){
+        return '<li>' + esc(x).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>') + '</li>';
+      }).join('') + '</ul>';
+    }
+    if(prov.local.length){
+      body += '<h4>地方节庆</h4><table class="grid"><tr><th>节庆</th><th>类型</th><th>时间</th><th>要点</th></tr>' +
+        prov.local.map(function(r){
+          return '<tr><td>' + esc(r[0]) + '</td><td>' + esc(r[1] || '') + '</td><td>' +
+            esc(r[3] || r[2] || '') + '</td><td>' + esc(r[r.length-1]) + '</td>';
+        }).join('') + '</table>';
+    }
+    if(prov.lodging.length){
+      body += '<h4>特色住宿</h4><table class="grid"><tr><th>名称</th><th>类型</th><th>要点</th></tr>' +
+        prov.lodging.map(function(r){
+          return '<tr><td>' + esc(r[0]) + '</td><td>' + esc(r[1] || '') + '</td><td>' +
+            esc(r[r.length-1]) + '</td>';
+        }).join('') + '</table>';
+    }
+    if(body) ov = '<details class="overview" open><summary>' + esc(prov.cn) +
+      ' · 速览（日历 / 节庆 / 住宿）</summary><div class="ov-body">' + body + '</div></details>';
+  }
+  $('overview').innerHTML = ov;
+
+  if(!hits.length){
+    $('cards').innerHTML = '<div class="empty"><div class="big">🌾</div>没有命中的景区<br>' +
+      '<small>试试放宽筛选或换一组关键词</small></div>';
+    return;
+  }
+  $('cards').innerHTML = hits.map(function(it){
+    var s = it.s, snip = snippet(s, state.q);
+    var badges = s.badges.map(function(b){
+      return '<span class="badge' + (b === '5A' ? ' gold' : '') + '">' + esc(b) + '</span>';
+    }).join('');
+    var th = s.themes.map(function(t){
+      return '<span class="th">' + esc(D.themeLabels[t] || t) + '</span>';
+    }).join(' · ');
+    return '<div class="card" data-k="' + it.p.key + '" data-i="' + s.id + '">' +
+      '<div class="t"><span class="nm">' + hl(s.name, state.q) + '</span>' +
+      '<span class="pv">' + esc(it.p.cn) + ' · ' + esc(s.region) + '</span>' + badges + '</div>' +
+      '<div class="meta">' + esc(s.cat || '') + (th ? ' ｜ ' + th : '') + ' · ' +
+      s.shots.length + ' 机位</div>' +
+      '<div class="win">' + hl(s.win || '', state.q) + '</div>' +
+      (snip ? '<div class="snip">' + snip + '</div>' : '') +
+      '</div>';
+  }).join('');
+  $('cards').querySelectorAll('.card').forEach(function(c){
+    c.onclick = function(){ openDetail(c.dataset.k, c.dataset.i); };
+  });
+}
+
+/* ---------- 详情 ---------- */
+function openDetail(key, id){
+  var p = D.provinces.filter(function(x){ return x.key === key; })[0];
+  if(!p) return;
+  var s = p.spots.filter(function(x){ return x.id === id; })[0];
+  if(!s) return;
+  $('m-name').innerHTML = esc(s.name) + ' ' + s.badges.map(function(b){
+    return '<span class="badge' + (b === '5A' ? ' gold' : '') + '" style="vertical-align:3px">' + esc(b) + '</span>';
+  }).join('');
+  $('m-sub').innerHTML = [
+    p.cn + (s.region ? ' · ' + s.region : ''),
+    (s.lon != null ? s.lon + ', ' + s.lat : ''),
+    (s.cat ? '类别 ' + s.cat : ''),
+    (s.alt ? '海拔 ' + s.alt : ''),
+    s.themes.map(function(t){ return D.themeLabels[t] || t; }).join(' / ')
+  ].filter(Boolean).join(' ｜ ');
+
+  var h = '<div class="win"><b>最佳窗口</b>　' + esc(s.win) + '</div>';
+  h += '<h3>文化历史</h3>' + s.hist.map(function(x){ return '<p>' + esc(x) + '</p>'; }).join('');
+  h += '<h3>风土人情</h3>' + s.folk.map(function(x){ return '<p>' + esc(x) + '</p>'; }).join('');
+  h += '<h3>出片要点</h3>';
+  h += s.tips.length ? '<ul>' + s.tips.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '';
+  if(s.shots.length){
+    h += '<table class="grid shots"><tr><th>机位</th><th>坐标 (lon, lat)</th><th>朝向</th><th>拍法要点</th></tr>' +
+      s.shots.map(function(x){
+        return '<tr><td>' + esc(x.n) + '</td><td class="mono">' + esc(x.lonlat) +
+          '</td><td class="mono">' + esc(x.yaw) + '</td><td>' + esc(x.tip) + '</td></tr>';
+      }).join('') + '</table>';
+  }
+  if(!s.tips.length && !s.shots.length) h += '<p class="meta">（源数据未附）</p>';
+  h += '<h3>地方特色</h3>' + (s.feat.length ?
+    '<ul>' + s.feat.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '');
+  h += '<h3>实用提示</h3>' + s.note.map(function(x){ return '<p>' + esc(x) + '</p>'; }).join('');
+  h += '<div class="foot">' +
+    (p.map ? '<a href="' + p.map + '">🗺 在地图中打开 ' + esc(p.cn) + '</a>' : '') +
+    '<a href="docs/spots/' + p.key + '.md">📄 查看 Markdown 源文档</a></div>';
+  $('m-body').innerHTML = h;
+  $('modal').classList.add('open');
+  $('modal').scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+  history.replaceState(null, '', '#' + key + '.' + id);
+}
+function closeDetail(){
+  $('modal').classList.remove('open');
+  document.body.style.overflow = '';
+  history.replaceState(null, '', location.pathname + location.search);
+}
+$('close').onclick = closeDetail;
+$('modal').onclick = function(e){ if(e.target === this) closeDetail(); };
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') closeDetail();
+  if(e.key === '/' && document.activeElement !== $('q')){
+    e.preventDefault(); $('q').focus();
+  }
+});
+
+/* ---------- 搜索 ---------- */
+var tmr = null;
+$('q').addEventListener('input', function(){
+  clearTimeout(tmr);
+  tmr = setTimeout(function(){ state.q = $('q').value.trim(); refresh(); }, 150);
+});
+
+/* ---------- 初始化 ---------- */
+$('hstats').textContent = D.provinces.length + ' 区域 · ' + ALL.length + ' 景区 · ' +
+  ALL.reduce(function(a, it){ return a + it.s.shots.length; }, 0) + ' 机位 · 生成于 ' + D.generated;
+var mh = location.hash.match(/^#([a-z-]+)\.(\d{2})$/);
+if(mh) openDetail(mh[1], mh[2]);
+refresh();
+})();
+</script>
+</body>
+</html>
