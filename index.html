@@ -423,6 +423,7 @@ function amRender() {
       '<b>' + s.n + '</b>' + (s.g5 ? ' <span style="background:#fff4d6;color:#a06b00;font-size:10px;padding:0 4px;border-radius:3px;border:1px solid #f0d48a">5A</span>' : '')
       + (s.np ? ' <span style="background:#e5f0ff;color:#1f5fa8;font-size:10px;padding:0 4px;border-radius:3px;border:1px solid #bcd4f0">国家公园</span>' : '')
       + '<br><span style="color:#64748b">' + s.pl + ' · ' + s.win + '</span>'
+      + (s.pm ? '<div style="margin:5px 0 2px;background:#f5f2fa;border-left:3px solid #1f5fa8;border-radius:0 6px 6px 0;padding:4px 8px"><div style="font-family:Georgia,\'Songti SC\',serif;font-size:12.5px;color:#3b2f63;line-height:1.6">' + s.pm.map(function(p){ return '『' + p.l + '』'; }).join('<br>') + '</div><div style="font-size:10.5px;color:#64748b;margin-top:2px">' + s.pm.map(function(p){ return p.a + '《' + p.t + '》· ' + p.d; }).join('／') + '</div></div>' : '')
       + '<br><a href="' + s.page + '" style="color:#1f5fa8">进入' + s.pl + '专题 →</a>');
     _m.bindTooltip(s.n, {direction:'right', className:'slabel', offset:[7,-5]});
     amMarks.push(_m);

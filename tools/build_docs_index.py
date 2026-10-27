@@ -35,7 +35,7 @@ CN = {
     'shanxi': '山西', 'sichuan': '四川', 'tianjin': '天津', 'xinjiang': '新疆',
     'xizang': '西藏', 'yellow-river': '黄河全线', 'yunnan': '云南', 'zhejiang': '浙江',
 }
-SECTIONS = ['文化历史', '风土人情', '出片要点', '地方特色', '实用提示']
+SECTIONS = ['文化历史', '唐宋诗词', '风土人情', '出片要点', '地方特色', '实用提示']
 THEME_LABELS = {
     'cloud': '云海雾凇', 'culture': '人文史迹', 'lake': '江湖瀑潮',
     'leaf': '林木秋叶', 'bloom': '花季物候', 'fall': '秋色', 'bird': '候鸟湿地',
@@ -127,7 +127,7 @@ def parse_spot(block):
     badges = [k for k, v in info.items() if v == '✅']
 
     # 五板块切分
-    parts = re.split(r'^### (文化历史|风土人情|出片要点|地方特色|实用提示)\s*$', block, flags=re.M)
+    parts = re.split(r'^### (文化历史|唐宋诗词|风土人情|出片要点|地方特色|实用提示)\s*$', block, flags=re.M)
     sec = {k: '' for k in SECTIONS}
     for i in range(1, len(parts) - 1, 2):
         sec[parts[i]] = parts[i + 1]
@@ -145,6 +145,11 @@ def parse_spot(block):
                 elif len(r) == 3:
                     shots.append({'n': r[0], 'lonlat': r[1], 'yaw': '—', 'tip': r[2]})
 
+    poems = []
+    for b in bullets(sec['唐宋诗词']):
+        m = re.match(r'^(\S+?)《(.+?)》（(唐|宋)）：『(.+?)』$', b)
+        if m:
+            poems.append({'a': m.group(1), 't': m.group(2), 'd': m.group(3), 'l': m.group(4)})
     feat = bullets(sec['地方特色']) or paragraphs(sec['地方特色'])
     spot = {
         'name': '', 'region': info.get('区域', ''), 'lon': lon, 'lat': lat,
@@ -152,6 +157,7 @@ def parse_spot(block):
         'alt': info.get('海拔', '') or None, 'win': win,
         'months': parse_months(win),
         'hist': paragraphs(sec['文化历史']),
+        'poems': poems,
         'folk': paragraphs(sec['风土人情']),
         'tips': tips, 'shots': shots, 'feat': feat,
         'note': paragraphs(sec['实用提示']),
@@ -206,7 +212,8 @@ def build():
         for s in p['spots']:
             blob = ' '.join([
                 p['cn'], s['name'], s['region'], s['cat'], s['win'],
-                ' '.join(s['themes']), ' '.join(s['hist']), ' '.join(s['folk']),
+                ' '.join(s['themes']), ' '.join(s['hist']),
+                ' '.join(x['a'] + ' ' + x['t'] + ' ' + x['l'] for x in s['poems']), ' '.join(s['folk']),
                 ' '.join(s['tips']), ' '.join(sh['n'] + ' ' + sh['tip'] for sh in s['shots']),
                 ' '.join(s['feat']), ' '.join(s['note']),
             ])
@@ -215,6 +222,7 @@ def build():
     data = {
         'generated': datetime.date.today().isoformat(),
         'themeLabels': THEME_LABELS,
+        'poemCount': sum(len(s['poems']) for p in provinces for s in p['spots']),
         'provinces': provinces,
     }
     payload = json.dumps(data, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')

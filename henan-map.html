@@ -54,6 +54,10 @@ aside h2{font-size:13px;color:var(--sub);font-weight:600;margin:4px 0 8px;letter
 .pp-name{font-size:15px;font-weight:700}
 .pp-region{color:var(--sub);font-size:12px;margin:2px 0 6px}
 .pp-note{background:#fdf3e7;border:1px solid #f3ddc0;border-radius:6px;padding:5px 9px;font-size:12px;margin:5px 0;color:#7a5200}
+.pp-poems{margin:5px 0}
+.pp-poem{background:#f5f2fa;border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:5px 9px;margin:4px 0}
+.pp-poem .pl{font-family:Georgia,"Songti SC",serif;font-size:12.5px;color:#3b2f63;line-height:1.65}
+.pp-poem .pm{font-size:11px;color:var(--sub);margin-top:2px}
 .pp-row{font-size:12.5px;margin:3px 0}
 .pp-row b.k{color:var(--sub);font-weight:600}
 .pp-coord{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:6px;padding:4px 8px;margin:6px 0;font-variant-numeric:tabular-nums}
@@ -255,6 +259,9 @@ var SPOTS = [
    {n:'调水调沙观景区', lon:112.3480, lat:34.9050, tip:'下游岸边：长焦压缩浊浪+水雾彩虹'}
   ]}
 ];
+/* 唐宋诗词关联（按景区名挂接） */
+var POEMS = {"嵩山·三皇寨": [{"t": "归嵩山作", "a": "王维", "d": "唐", "l": "清川带长薄，车马去闲闲。"}, {"t": "送杨山人归嵩山", "a": "李白", "d": "唐", "l": "我有万古宅，嵩阳玉女峰。"}]};
+SPOTS.forEach(function(s){ if (POEMS[s.name]) s.poems = POEMS[s.name]; });
 
 var REGION_ORDER = ['焦作市','新乡市','安阳市','洛阳市','三门峡市','平顶山市','驻马店市','郑州市'];
 function regionKey(s){ return s.region.match(/(焦作市|新乡市|安阳市|洛阳市|三门峡市|平顶山市|驻马店市|郑州市)/) ? RegExp.$1 : '其他'; }
@@ -297,6 +304,7 @@ function parkPopup(s){
   var h = '<div class="pp-name">' + s.name + (s.g5 ? '<span class="badge b5a">5A</span>' : '') + '</div>'
     + '<div class="pp-region">' + s.region + (s.alt ? ' · ' + s.alt : '') + '</div>'
     + (s.note ? '<div class="pp-note">' + s.note + '</div>' : '')
+    + (s.poems && s.poems.length ? '<div class="pp-poems">' + s.poems.map(function(p){ return '<div class="pp-poem"><div class="pl">『' + p.l + '』</div><div class="pm">—— ' + p.a + '《' + p.t + '》· ' + p.d + '</div></div>'; }).join('') + '</div>' : '')
     + '<div class="pp-row"><b class="k">最佳窗口</b>　' + s.win + '</div>'
     + '<div class="pp-row"><b class="k">题材</b>　' + s.themes.map(function(t){return CAT[t].label;}).join(' / ') + '</div>'
     + '<div class="pp-coord"><span>' + coordTxt(s.lat, s.lon) + '</span>' + copyBtn(coordTxt(s.lat, s.lon)) + '</div>'

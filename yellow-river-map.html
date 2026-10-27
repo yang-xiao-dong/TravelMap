@@ -58,6 +58,10 @@ aside h2{font-size:13px;color:var(--sub);font-weight:600;margin:4px 0 8px;letter
 .pp-name{font-size:15px;font-weight:700}
 .pp-region{color:var(--sub);font-size:12px;margin:2px 0 6px}
 .pp-note{background:#fdf3e7;border:1px solid #f3ddc0;border-radius:6px;padding:5px 9px;font-size:12px;margin:5px 0;color:#7a5200}
+.pp-poems{margin:5px 0}
+.pp-poem{background:#f5f2fa;border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:5px 9px;margin:4px 0}
+.pp-poem .pl{font-family:Georgia,"Songti SC",serif;font-size:12.5px;color:#3b2f63;line-height:1.65}
+.pp-poem .pm{font-size:11px;color:var(--sub);margin-top:2px}
 .pp-row{font-size:12.5px;margin:3px 0}
 .pp-row b.k{color:var(--sub);font-weight:600}
 .pp-coord{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:6px;padding:4px 8px;margin:6px 0;font-variant-numeric:tabular-nums}
@@ -203,6 +207,9 @@ var SPOTS = [
    {n:'黄河三角洲湿地', lon:119.1000, lat:37.7500, tip:'芦苇荡+鹤群：晨雾逆光长焦'}
   ]}
 ];
+/* 唐宋诗词关联（按景区名挂接） */
+var POEMS = {"沙坡头": [{"t": "使至塞上", "a": "王维", "d": "唐", "l": "大漠孤烟直，长河落日圆。"}], "潼关": [{"t": "秋日赴阙题潼关驿楼", "a": "许浑", "d": "唐", "l": "红叶晚萧萧，长亭酒一瓢。"}, {"t": "潼关吏", "a": "杜甫", "d": "唐", "l": "士卒何草草，筑城潼关道。"}]};
+SPOTS.forEach(function(s){ if (POEMS[s.name]) s.poems = POEMS[s.name]; });
 
 /* 异形住宿层（🛖 紫色菱形标记） */
 var LODGING = [
@@ -253,6 +260,7 @@ function parkPopup(s){
   var h = '<div class="pp-name">' + s.name + (s.g5 ? '<span class="badge b5a">5A</span>' : '') + (s.np ? '<span class="badge bnp">国家公园</span>' : '') + '</div>'
     + '<div class="pp-region">' + s.region + (s.alt ? ' · ' + s.alt : '') + '</div>'
     + (s.note ? '<div class="pp-note">' + s.note + '</div>' : '')
+    + (s.poems && s.poems.length ? '<div class="pp-poems">' + s.poems.map(function(p){ return '<div class="pp-poem"><div class="pl">『' + p.l + '』</div><div class="pm">—— ' + p.a + '《' + p.t + '》· ' + p.d + '</div></div>'; }).join('') + '</div>' : '')
     + '<div class="pp-row"><b class="k">最佳窗口</b>　' + s.win + '</div>'
     + '<div class="pp-row"><b class="k">题材</b>　' + s.themes.map(function(t){return CAT[t].label;}).join(' / ') + '</div>'
     + '<div class="pp-coord"><span>' + coordTxt(s.lat, s.lon) + '</span>' + copyBtn(coordTxt(s.lat, s.lon)) + '</div>'
