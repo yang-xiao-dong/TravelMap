@@ -33,6 +33,11 @@ def check(path):
             errs.append('local「%s」缺 n/type/tip' % u.get('n'))
         if u.get('lon') is not None and (not ok_num(u.get('lon')) or not ok_num(u.get('lat'))):
             errs.append('local「%s」坐标非法' % u.get('n'))
+    rt = d.get('route')
+    if rt is not None and (not isinstance(rt, list) or len(rt) < 2 or
+            any(not (isinstance(p, (list, tuple)) and len(p) == 2 and
+                     ok_num(p[0]) and ok_num(p[1])) for p in rt)):
+        errs.append('route 非法（须为 [lat,lon] 数组且>=2 点）')
     print(path, 'spots=%d subs=%d' % (len(d['spots']), sum(len(s['subs']) for s in d['spots'])))
     if errs:
         print('\n'.join(errs))
