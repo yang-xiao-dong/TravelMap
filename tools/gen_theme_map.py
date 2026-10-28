@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""主题采风图生成器：data/<pinyin>.json -> <pinyin>-map.html
+"""主题采风图生成器：data/<pinyin>.json -> maps/<pinyin>-map.html
 模板与 henan-map.html 同构（层级/筛选/人视模拟/异形住宿层）。
 用法：python tools/gen_theme_map.py data/shanxi.json
 """
@@ -11,7 +11,7 @@ TPL = u"""<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>__TITLE__</title>
-<link rel="stylesheet" href="lib/leaflet.css">
+<link rel="stylesheet" href="../lib/leaflet.css">
 <style>
 :root{ --accent:__ACCENT__; --ink:#22304a; --sub:#64748b; --line:#e2e8f0; --bg:#f6f8fb;
   --bloom:#d6336c; --fall:#0e9aa7; --leaf:#e8590c; --cloud:#7048e8; --lake:#2f9e44; --bird:#1c7ed6; --stay:#9c36b5; }
@@ -91,7 +91,7 @@ aside h2{font-size:13px;color:var(--sub);font-weight:600;margin:4px 0 8px;letter
 <div class="layout">
   <header>
     <h1>__H1__</h1>
-    <span class="sub">__SUBHEAD__ · 坐标 WGS84 近似参考点，导航以景区大门为准 · <a href="index.html">← 规划中心</a></span>
+    <span class="sub">__SUBHEAD__ · 坐标 WGS84 近似参考点，导航以景区大门为准 · <a href="../index.html">← 规划中心</a></span>
   </header>
   <aside>
     <h2>按拍摄题材筛选</h2>
@@ -103,11 +103,11 @@ aside h2{font-size:13px;color:var(--sub);font-weight:600;margin:4px 0 8px;letter
   <div id="map"></div>
 </div>
 
-<script src="lib/leaflet.js"></script>
-<script src="js/qinling/dem.js?v=1"></script>
-<script src="js/qinling/sun.js?v=2"></script>
-<script src="js/qinling/texture.js?v=2"></script>
-<script src="js/qinling/pano.js?v=5"></script>
+<script src="../lib/leaflet.js"></script>
+<script src="../js/qinling/dem.js?v=1"></script>
+<script src="../js/qinling/sun.js?v=2"></script>
+<script src="../js/qinling/texture.js?v=2"></script>
+<script src="../js/qinling/pano.js?v=5"></script>
 <script>
 var CAT = __CAT__;
 var SPOTS = __SPOTS__;
@@ -443,7 +443,7 @@ def main(path):
         .replace('__CLON__', str(d['center'][1]))
         .replace('__ZINIT__', str(d.get('z_init', 7))))
     out = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                       d['pinyin'] + '-map.html')
+                       'maps', d['pinyin'] + '-map.html')
     io.open(out, 'w', encoding='utf-8', newline='\n').write(html)
     print('written', out, len(spots), u'景区', sum(len(s["subs"]) for s in spots), u'机位')
 

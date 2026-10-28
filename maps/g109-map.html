@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G109 青藏线 · 摄影公路</title>
+<link rel="stylesheet" href="../lib/leaflet.css">
+<style>
+:root{ --accent:#d6336c; --ink:#22304a; --sub:#64748b; --line:#e2e8f0; --bg:#f6f8fb;
+  --bloom:#d6336c; --fall:#0e9aa7; --leaf:#e8590c; --cloud:#7048e8; --lake:#2f9e44; --bird:#1c7ed6; --stay:#9c36b5; }
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;color:var(--ink);background:var(--bg)}
+.layout{display:grid;grid-template-columns:330px 1fr;grid-template-rows:auto 1fr;height:100vh}
+header{grid-column:1/-1;display:flex;align-items:baseline;gap:14px;padding:12px 18px 10px;border-bottom:1px solid var(--line);background:#fff;flex-wrap:wrap}
+header h1{font-family:Georgia,"Songti SC",serif;font-size:21px;color:var(--accent);letter-spacing:.5px}
+header .sub{font-size:12px;color:var(--sub);flex:1}
+header .sub a{color:var(--accent);text-decoration:none}
+header .sub a.cur{font-weight:700;border-bottom:2px solid var(--accent)}
+header a.back{font-size:13px;color:var(--accent);text-decoration:none;border:1px solid var(--accent);border-radius:6px;padding:3px 10px;white-space:nowrap}
+header a.back:hover{background:var(--accent);color:#fff}
+aside{overflow-y:auto;border-right:1px solid var(--line);background:#fff;padding:12px 14px 20px}
+aside h2{font-size:13px;color:var(--sub);font-weight:600;margin:4px 0 8px;letter-spacing:.5px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chip{font-size:12px;padding:3px 10px;border:1px solid var(--line);border-radius:999px;cursor:pointer;background:#fff;user-select:none}
+.chip.on{color:#fff;border-color:transparent}
+.zhint{font-size:11px;color:var(--sub);margin-bottom:8px;line-height:1.5}
+.cal{background:#f0f6ff;border:1px solid #d4e4f7;border-radius:8px;padding:6px 10px;margin-bottom:10px}
+.cal h3{font-size:11px;color:var(--accent);margin-bottom:3px;letter-spacing:1px}
+.cal p{font-size:11px;color:var(--ink);line-height:1.7}
+.cal b{color:var(--accent);font-weight:600}
+.grp{font-size:12px;color:var(--sub);margin:12px 0 4px;font-weight:600;letter-spacing:1px}
+.item{border:1px solid transparent;border-radius:9px;cursor:pointer}
+.item:hover{background:var(--bg)}
+.item .row{display:flex;gap:9px;padding:8px 8px;align-items:flex-start}
+.item .num{flex:none;width:22px;height:22px;border-radius:50%;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px;box-shadow:0 0 0 2px #fff,0 0 0 3.5px rgba(34,48,74,.12)}
+.item .nm{font-size:13.5px;font-weight:600;line-height:1.35}
+.item .meta{font-size:11.5px;color:var(--sub);margin-top:2px;line-height:1.5}
+.item .arrow{flex:none;margin-left:auto;font-size:10px;color:var(--sub);transition:transform .15s;margin-top:4px}
+.item.open .arrow{transform:rotate(90deg)}
+.subs{display:none;padding:0 6px 8px 39px}
+.item.open .subs{display:block}
+.subrow{padding:5px 6px;border-left:2.5px solid var(--sc,#999);margin:3px 0;border-radius:0 6px 6px 0;cursor:pointer;background:#fafbfd}
+.subrow:hover{background:var(--bg)}
+.subrow .sn{font-size:12.5px;font-weight:600}
+.subrow .st{font-size:11px;color:var(--sub);line-height:1.45;margin-top:1px}
+.badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:4px;margin-left:5px;vertical-align:1px}
+.b5a{background:#fff4d6;color:#a06b00;border:1px solid #f0d48a}
+.bnp{background:#e5f0ff;color:#1f5fa8;border:1px solid #bcd4f0}
+.stayrow{padding:6px 8px;border-left:2.5px solid var(--stay);margin:3px 0;border-radius:0 6px 6px 0;background:#fbf6fd}
+.stayrow .sn{font-size:12.5px;font-weight:600;color:#862e9c}
+.stayrow .st{font-size:11px;color:var(--sub);line-height:1.45;margin-top:1px}
+#map{height:100%;background:#dfe6ee;z-index:1}
+.leaflet-container{font-family:inherit}
+.leaflet-popup-content{font-size:13px;line-height:1.6;margin:10px 14px;width:258px!important}
+.pp-name{font-size:15px;font-weight:700}
+.pp-region{color:var(--sub);font-size:12px;margin:2px 0 6px}
+.pp-note{background:#fdf3e7;border:1px solid #f3ddc0;border-radius:6px;padding:5px 9px;font-size:12px;margin:5px 0;color:#7a5200}
+.pp-story{background:#f6f1e4;border-left:3px solid #8a5a00;border-radius:0 6px 6px 0;padding:5px 9px;font-size:12px;margin:5px 0;color:#5c4a1a;line-height:1.55}
+.pp-row{font-size:12.5px;margin:3px 0}
+.pp-row b.k{color:var(--sub);font-weight:600}
+.pp-coord{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:6px;padding:4px 8px;margin:6px 0;font-variant-numeric:tabular-nums}
+.pp-coord button{border:none;background:var(--accent);color:#fff;font-size:11px;border-radius:5px;padding:2px 8px;cursor:pointer}
+.pp-tips{margin:6px 0 4px;padding-left:17px}
+.pp-tips li{margin:3px 0;font-size:12.5px}
+.pp-subs{margin:5px 0 2px;padding-left:0;list-style:none}
+.pp-subs li{margin:2px 0;font-size:12.5px}
+.pp-subs li:before{content:'▸ ';color:var(--accent)}
+.pp-links{margin-top:8px;display:flex;gap:10px}
+.pp-links a{font-size:12px;color:var(--accent);text-decoration:none;border-bottom:1px dashed var(--accent)}
+.p3dopen{border:1px solid var(--accent);background:#fff;color:var(--accent);font-size:12px;border-radius:6px;padding:2px 10px;cursor:pointer}
+.p3dopen:hover{background:var(--accent);color:#fff}
+.subrow .sn .p3dopen{float:right;font-size:11px;padding:0 7px;line-height:19px;border-radius:5px}
+.slabel{background:transparent!important;border:none!important;box-shadow:none!important;font:600 11px "PingFang SC","Microsoft YaHei",sans-serif;color:#22304a;text-shadow:0 0 3px #fff,0 0 5px #fff,0 0 7px #fff;padding:0;margin:0 0 0 4px!important}
+.leaflet-tooltip.slabel::before{display:none}
+@media (max-width:760px){.layout{grid-template-columns:1fr;grid-template-rows:auto 34vh 1fr}aside{border-right:none;border-bottom:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <header>
+    <h1>G109 青藏线 · 摄影公路</h1>
+    <span class="sub">公路走廊 → 景区 → 机位 三级结构 · 18 景区 39 机位 · 坐标 WGS84 近似参考点，导航以景区大门为准 · <a href="../index.html">← 规划中心</a></span>
+  </header>
+  <aside>
+    <h2>按拍摄题材筛选</h2>
+    <div class="chips" id="chips"></div>
+    <div class="zhint">缩放到 z≥11 展开小景点；🛖 为异形住宿</div>
+    <div class="cal"><h3>季节日历</h3><p><b>3–4月</b> 沿线城镇藏历新年（洛萨）盛装与法会，湟源峡春水初涨、河谷杨树返青<br><b>5月</b> 纳木错开湖解冻、那根拉前后雪墙未消；青海湖候鸟回归（鸟岛景区已关闭，湖岸远观）<br><b>6月</b> 藏羚羊向卓乃湖迁徙经不冻泉—五道梁通道（晨昏长焦远观，禁越保护区界）；环湖草原返绿、日月光影最硬<br><b>7月</b> 青海湖油菜花峰值与环湖赛（7月中下旬）；茶卡『天空之镜』雨季浅水+静风窗口最稳<br><b>8月</b> 那曲恰青赛马艺术节（近年固定8月10日前后开幕）；羌塘草原最绿、错那湖蓝绿对撞<br><b>9月</b> 能见度全年最高：念青唐古拉、玉珠峰、昆仑雪峰全清晰，纳木错蓝到极致，青旅淡季好宿<br><b>10月上–11月初</b> 湟源峡秋叶、日月山草甸金黄；唐古拉段初雪后封路风险上升<br><b>11–次年4月</b> 冻土段冰雪与风吹雪常致临时交通管制；那根拉大雪常封（当日路况必查）；历年多有『冬游西藏』优惠政策（以当年公告为准）<br><b>全年</b> 黑马河湖滩日出、昆仑山口碑林、羊八井清晨蒸汽与雪山同框<br></p></div>
+    <div id="list"></div>
+  </aside>
+  <div id="map"></div>
+</div>
+
+<script src="../lib/leaflet.js"></script>
+<script src="../js/qinling/dem.js?v=1"></script>
+<script src="../js/qinling/sun.js?v=2"></script>
+<script src="../js/qinling/texture.js?v=2"></script>
+<script src="../js/qinling/pano.js?v=5"></script>
+<script>
+var CAT = {"bloom": {"label": "花海·山花", "color": "#d6336c"}, "fall": {"label": "瀑布溪流", "color": "#0e9aa7"}, "leaf": {"label": "红叶秋色", "color": "#e8590c"}, "cloud": {"label": "云海日出·星空", "color": "#7048e8"}, "lake": {"label": "峡谷水体·地质", "color": "#2f9e44"}, "bird": {"label": "冬季候鸟", "color": "#1c7ed6"}, "culture": {"label": "人文史迹", "color": "#f08c00"}};
+var SPOTS = [{"id": 1, "name": "湟源峡（西石峡·巴燕峡·药水峡）", "region": "河湟环湖段", "lon": 101.336, "lat": 36.683, "alt": 2800, "cat": "leaf", "themes": ["leaf", "cloud"], "win": "全年可拍；10月中–11月初峡谷杨桦秋叶峰值，春夏雨后湟水浊浪与崖壁云雾；冬季峡谷背阴处结冰挂凌", "note": "峡谷段沿G109青藏公路约35–90公里处，路窄弯多、重卡密集，停车务必进港湾或观景带，严禁弯道占道拍摄；峡谷整体海拔约2800–3500米", "tips": ["秋色以10月下旬清晨侧光最浓，中长焦顺光压缩崖壁红黄层理", "雨后湟水含沙量高呈黄红色，与青灰崖壁撞色，广角低机位贴水拍"], "story": "湟水切开祁连余脉的『海藏咽喉』，明清以来丹噶尔茶马互市的商队由此出入青藏；西石峡、巴燕峡、药水峡三段峡谷构成进青海湖前的最后山门。", "subs": [{"n": "西石峡·湟水峡谷段", "lon": 101.336, "lat": 36.683, "yaw": 90, "tip": "湟源县城东南约6.5公里进峡口：上午顺侧光打亮北岸崖壁，长焦分层峡谷与车流灯轨（蓝调时刻）"}, {"n": "药水峡·林带弯道", "lon": 101.336, "lat": 36.683, "yaw": 200, "tip": "峡内连续弯道秋叶最密段：清晨背光位拍薄雾穿林，50mm守弯道卡车驶过扬尘瞬间"}]}, {"id": 2, "name": "日月山·唐蕃古道垭口", "region": "河湟环湖段", "lon": 101.17, "lat": 36.43, "alt": 3520, "cat": "bloom", "themes": ["bloom", "culture", "cloud"], "win": "6–8月垭口两侧油菜花与草甸最盛；9–10月草甸金黄、能见度高可东西两望；冬季多风雪，日亭月亭前风旗最烈", "note": "山口海拔3520米，是青海农区与牧区的气候分界，垭口风大温低、春秋季备防风衣物；景区售票入内，垭口公路两侧亦有公路视角机位，停车勿占国道路肩", "tips": ["7–8月清晨拍日亭金顶配南侧油菜花田，广角低角度把经幡做前景", "西望倒淌河谷日落时分最暖，长焦压缩河谷与雪山层"], "story": "文成公主摔碎日月宝镜的传说发生地，垭口日亭月亭相对而立，是唐蕃古道与农牧分界线的双重地标；山下倒淌河自此西流，『众河皆东我独西』。", "subs": [{"n": "日月山垭口·日亭月亭", "lon": 101.17, "lat": 36.43, "yaw": 90, "tip": "垭口制高点双亭对称构图：7月晨光顺光金顶，风马旗横幅做前景仰拍"}, {"n": "倒淌河镇·倒淌河西流段", "lon": 100.98, "lat": 36.44, "yaw": 270, "tip": "镇西侧西流河谷：日落时分逆光拍河湾与镇炊烟，24–35mm带入经幡"}]}, {"id": 3, "name": "青海湖·黑马河", "region": "河湟环湖段", "lon": 99.77, "lat": 36.72, "alt": 3200, "cat": "lake", "themes": ["lake", "bloom", "bird"], "win": "全年可拍，日出均为核心；7–8月环湖西路油菜花峰值；5–6月与9–10月候鸟群聚湖湾（鸟岛景区2017年起停止对外开放，只能湖岸公共区域远观）", "note": "镇海拔约3200米，湖边夜间寒凉；环湖部分湖岸为牧民草场，穿行入湖需经牧户同意并留意围栏（多有小径收费10–20元/人）；黑马河—鸟岛段环湖西路约78公里为公认最美路段，弯道多、旅游车多", "tips": ["日出前40分钟到湖滩定机位：夏季日出方位偏北，金色湖面配南向经幡前景", "环湖西路拍油菜花+湖岸：上午顺光、下午逆光拍花田轮廓光", "湖边夜间气温可至5℃上下（夏季），拍星空备手套与头灯"], "story": "青海湖西岸最大的藏族聚居镇，环湖朝圣者与转湖信众的传统歇脚地；每年夏季油菜花开时，经幡、花田与湖岸日出同框，是青藏线开篇最经典的一帧。", "subs": [{"n": "黑马河湖滩·日出位", "lon": 99.77, "lat": 36.72, "yaw": 90, "tip": "镇南湖滩开阔无遮挡：日出前粉紫天际线转金毯铺湖，16–35mm+渐变灰，前景选玛尼堆或枯木"}, {"n": "环湖西路·油菜花经幡段", "lon": 99.77, "lat": 36.72, "yaw": 270, "tip": "镇北沿环湖西路择牧民小径下湖：7月花田黄蓝撞色，日落逆光拍花田轮廓与湖面反光"}, {"n": "黑马河镇·晨集炊烟", "lon": 99.77, "lat": 36.72, "yaw": 0, "tip": "清晨镇口炊烟与转经人流：人文视角35mm，日出后趁人流未散先扫街再下湖"}]}, {"id": 4, "name": "茶卡盐湖（天空之镜）", "region": "柴达木段", "lon": 99.078, "lat": 36.76, "alt": 3100, "cat": "lake", "themes": ["lake", "cloud"], "win": "6–9月雨季浅水+静风时段是『天空之镜』峰值窗口；10月后卤水渐退、镜面效果不稳；冬季湖面结冰另有一派盐雪色调", "note": "门区在茶卡镇盐湖路9号，湖面海拔约3100米；拍倒影要无风+浅水，下湖穿鞋套保护盐层、深度勿过脚踝；晴天正午反光极强，墨镜与偏振镜必备；旺季（7–8月）人潮大，日出前后入场最空", "tips": ["镜面机位在盐田浅水区深处，越往外水越静：赤脚/鞋套进入，曝光宁欠一档保高光", "日落时分拍盐雕剪影与晚霞同框，中长焦挑独立盐雕避人群", "正午顶光平淡，改拍盐田几何肌理（无人机需报备限飞区）"], "story": "古丝绸之路青海道上的盐运重镇，『茶卡』即藏语盐池之意；两百余年的采盐史让盐层上积水成镜，天空之镜因此得名，盐雕群是近年的新前景。", "subs": [{"n": "天空之镜·下湖点纵深位", "lon": 99.078, "lat": 36.76, "yaw": 180, "tip": "沿盐湖路门区进湖向纵深走：静风清晨镜面最完整，人物居中对称构图，快门1/125s以上定格倒影"}, {"n": "千映慕雪·日落机位", "lon": 99.1, "lat": 36.69, "yaw": 270, "tip": "湖西南侧日落向：晚霞烧红盐层水面，中长焦挑盐雕剪影，落日后15分钟蓝调最佳"}]}, {"id": 5, "name": "都兰·热水墓群（血渭一号大墓）", "region": "柴达木段", "lon": 98.09, "lat": 36.3, "alt": 3190, "cat": "culture", "themes": ["culture", "fall"], "win": "全年可拍；9–10月察汗乌苏河谷杨树金黄配封土堆最出片；夏季草原绿毯上黑褐色封土轮廓分明", "note": "墓群在察汗乌苏镇东南约10公里热水沟两岸，海拔3400–3500米；属全国重点文保与在研考古区，严禁进入封土与探方，只能公路/围栏外远观拍摄；县城海拔约3190米", "tips": ["血渭一号大墓体量宏大：公路远点用200mm以上长焦压缩封土与山脊线条", "9月下旬清晨顺光拍封土堆投影，前景带河谷金黄杨树"], "story": "吐蕃—吐谷浑时期的高等级王陵带，热水一号大墓被当地称作『九层妖楼』；2018血渭一号墓入选2020年度全国十大考古新发现，实证丝绸之路青海道的千年繁华。", "subs": [{"n": "血渭一号大墓·围栏外远观点", "lon": 98.18, "lat": 36.24, "tip": "热水沟内围栏外公路侧（坐标为按『镇东南约10公里』推算的远观区域，实地以文保标识为准）：长焦拍梯形封土与『九层』夯层纹理"}, {"n": "察汗乌苏河谷·县城段", "lon": 98.09, "lat": 36.3, "yaw": 90, "tip": "河谷杨林秋色晨雾：10月中下旬清晨35mm拍河谷炊烟与远山雪线"}]}, {"id": 6, "name": "格尔木市区（将军楼·望柳庄）", "region": "柴达木段", "lon": 94.9, "lat": 36.4, "alt": 2780, "cat": "culture", "themes": ["culture"], "win": "全年可拍；夏季城区胡杨与杨林道绿荫最浓，冬季戈壁雪后城区—昆仑山门一线对比强烈", "note": "市区海拔约2780米，是进青藏线前最后一个大补给城：车辆检查、氧气与药品采购在此完成；格尔木至那曲段全程测速与限时卡口严格（常见限速60–80km/h），出发前查当日唐古拉段路况；G109出城约25公里即昆仑山门『万山之祖』碑（坐标为沿路推算，实地以路碑为准）", "tips": ["将军楼公园拍纪念建筑与老吉普，黄昏暖光最厚重", "昆仑山门双碑（万山之祖/巍巍昆仑）配雪山背景，上午顺光"], "story": "1954年慕生忠将军率驼工在戈壁上建起的城市，种活的头排树得名『望柳庄』；将军楼是青藏公路的起点纪念地，两条进藏动脉的历史在此开篇。", "subs": [{"n": "将军楼公园", "lon": 94.9, "lat": 36.4, "yaw": 180, "tip": "慕生忠纪念馆与将军楼原址：日落前侧光拍砖楼质感，人文纪实带老人晨练"}, {"n": "昆仑山门·『万山之祖』碑段", "lon": 94.87, "lat": 36.18, "yaw": 180, "tip": "G109出城约25公里处双碑分立公路两侧（坐标为推算示意）：南望昆仑雪峰顺光，广角贴碑拍公路纵深"}]}, {"id": 7, "name": "纳赤台·昆仑泉", "region": "昆仑段", "lon": 94.573, "lat": 35.88, "alt": 3575, "cat": "culture", "themes": ["culture", "cloud"], "win": "全年可拍；昆仑泉四季不冻，冬季泉眼蒸汽配两岸雪线最独特；6–8月昆仑河洪水期浊浪与雪山同框", "note": "纳赤台海拔约3575米（一说3540–3700米区间），在G109格尔木西南约94公里；高原适应第一站，停留活动放缓；公路边停车入硬化区，留意大货车", "tips": ["泉眼晨拍蒸汽：-10℃以下清晨逆光位，100mm微距拍水泡涌动", "昆仑河峡谷段拍雪峰倒影：上午顺光，偏振镜压水面反光"], "story": "藏语『纳赤台』意为有能源的地方，相传文成公主进藏时在此搁放行李；昆仑河北岸的昆仑泉终年喷涌不冻，被称作昆仑山第一圣泉。", "subs": [{"n": "昆仑泉泉眼", "lon": 94.573, "lat": 35.88, "yaw": 90, "tip": "镇中泉池四季涌水：冬季清晨蒸汽最浓，低机位逆光拍气泡与冰沿"}, {"n": "昆仑河峡谷·南望雪岭", "lon": 94.573, "lat": 35.88, "yaw": 180, "tip": "河谷南向昆仑雪岭层次：上午顺光长焦分层，云影扫过山体时连拍"}]}, {"id": 8, "name": "西大滩·玉珠峰观景段", "region": "昆仑段", "lon": 94.312, "lat": 35.75, "alt": 4100, "cat": "cloud", "themes": ["cloud"], "win": "全年可拍雪山；5–9月为玉珠峰登山季（南坡大本营活动集中），旗云出现率最高；冬季大气通透、冰塔雪脊最锐", "note": "西大滩海拔约4100米，玉珠峰6178米在公路西南侧；玉珠峰登山大本营在公路以西十余公里砂石路深处，非登山注册勿深入；此段海拔爬升快，前夜宿格尔木、当日不宜剧烈活动", "tips": ["玉珠峰山体上午偏逆、下午顺光：15–17时主峰细节最锐，长焦400mm级压缩冰脊", "傍晚守旗云：山顶荚状云+旗状云出现时，广角带公路做对角线"], "story": "昆仑山北麓的登山门户，玉珠峰是公认的『人生第一座六千米』；中国民间登山运动的黄金时代从西大滩的砂石路口起步。", "subs": [{"n": "西大滩·玉珠峰正面观景段", "lon": 94.312, "lat": 35.75, "yaw": 200, "tip": "公路西南望主峰：下午顺光雪檐清晰，前景选玛尼堆与公路护栏做引导线"}, {"n": "玉珠峰南坡·大本营方向远眺", "lon": 94.312, "lat": 35.75, "yaw": 270, "tip": "登山季傍晚拍摄者帐篷点点远眺（不深入砂石路）：长焦收压缩，日落后蓝调拍暖色帐篷灯"}]}, {"id": 9, "name": "昆仑山口", "region": "昆仑段", "lon": 94.076, "lat": 35.646, "alt": 4767, "cat": "cloud", "themes": ["cloud", "culture"], "win": "全年可拍；9–10月最稳（风小能见度高）；冬季与初春风吹雪频繁，垭口旗云与雪柱是高光时刻", "note": "垭口海拔4767米（资料另有4768米之说），距格尔木约160公里，青藏公路在此翻越昆仑山；高反首关，停留不超半小时、勿奔跑；垭口停车区拍碑林注意避让车流，冬季路面暗冰", "tips": ["碑林+垭口标志碑标准机位：上午顺光，低角度把公路弯道做前景", "东望玉虚峰雪岭：午后云量最少时段用长焦分层，风大时稳住三脚架"], "story": "慕生忠将军当年翻越只说『十二步』，山口因此别名十二步山；垭口南侧的杰桑·索南达杰纪念碑，纪念为保护可可西里藏羚羊牺牲的西部工委书记。", "subs": [{"n": "索南达杰纪念碑·碑林区", "lon": 94.076, "lat": 35.646, "yaw": 90, "tip": "垭口南侧碑林：仰拍纪念碑与经幡，人物剪影致意须肃穆；风大用高速快门凝住经幡"}, {"n": "垭口南北双向视点", "lon": 94.076, "lat": 35.646, "yaw": 0, "tip": "北望昆仑雪岭、南望可可西里荒原：一站双拍，午后南向反差最平缓"}]}, {"id": 10, "name": "不冻泉·可可西里保护站", "region": "可可西里段", "lon": 93.916, "lat": 35.52, "alt": 4680, "cat": "bird", "themes": ["bird", "cloud"], "win": "全年可拍；6–7月藏羚羊向卓乃湖产羔地迁徙、7月底–8月回迁，是沿线野生动物观察窗口（晨昏最活跃）；冬季荒原雪原配红顶保护站对比强烈", "note": "保护站海拔约4680米，在青藏公路K2997里程碑一带、距格尔木约256公里；可可西里保护区严禁擅自进入，只能在公路沿线远距离观察拍摄（长焦、不鸣笛、不追赶）；高原午后天气多变，备防风装备", "tips": ["藏羚羊拍摄守则：400mm以上、熄火静候晨昏，与兽群保持百米以上距离", "红顶站房+雪山背景是标准人文构图：清晨顺光，等巡山队员进出再按快门"], "story": "因一股终年不冻的泉水得名，是可可西里国家级自然保护区的北大门；索南达杰牺牲后，红顶保护站成为反盗猎与藏羚羊守护的精神地标。", "subs": [{"n": "不冻泉保护站·红顶站房", "lon": 93.916, "lat": 35.52, "yaw": 90, "tip": "公路东侧保护站：清晨顺光红顶最饱和，长焦站房配玉珠峰方向雪线"}, {"n": "公路沿线·藏羚羊观察段", "lon": 93.916, "lat": 35.52, "yaw": 180, "tip": "迁徙季晨昏在护栏内侧静候：车窗脚架或路侧固定机位，兽群过路让行、绝不驱赶"}]}, {"id": 11, "name": "五道梁", "region": "可可西里段", "lon": 93.083, "lat": 35.219, "alt": 4600, "cat": "cloud", "themes": ["cloud", "bird"], "win": "全年可拍；夏季多对流云与『六月飞雪』奇观；9–10月能见度最高、荒原色块最干练；冬季极端低温不宜久留", "note": "民谚『到了五道梁，哭爹又叫娘』：镇区海拔约4600米以上（资料4600/4636/4675多值并存，铁路站4636米），含氧量不足海平面一半，全线高反最烈段之一——快速通过或只短停；道班与保护站可应急补给，夜间勿赶路", "tips": ["荒原公路大场景：S形路肩线+对流云底，广角贴地拍，但严禁路中央逗留", "高反防护优先于拍摄：此段尽量安排白天快速通过，拍摄窗口压缩在半小时内"], "story": "慕生忠以从北向南第五道山梁命名的高原关口，『地高天寒，四季皆冬』；一百多名道班工人与保护站人员常年驻守，是青藏公路活着的历史。", "subs": [{"n": "五道梁镇·公路街段", "lon": 93.083, "lat": 35.219, "yaw": 0, "tip": "镇口道路牌坊与云层压顶：广角仰拍公路纵深，正午前后云最立体"}, {"n": "南向荒原·冻土缓丘段", "lon": 93.083, "lat": 35.219, "yaw": 180, "tip": "镇南冻土起伏丘原：晨昏侧光拍大地肌理，偶见藏原羚小群远观（不追赶）"}]}, {"id": 12, "name": "沱沱河·长江源（唐古拉山镇）", "region": "通天河段", "lon": 92.433, "lat": 34.217, "alt": 4533, "cat": "lake", "themes": ["lake", "bird", "culture"], "win": "全年可拍；夏季（7–8月）冰雪融水最大、辫状水系铺展最壮观；9–10月水退沙洲出露、晨雾贴河；冬季河道封冻纹理独特", "note": "沱沱河沿海拔4533米（唐古拉山镇驻地），距格尔木约425公里；长江源纪念碑与桥头为停车拍摄点，河滩湿地属三江源保护区范围，勿驾车下河滩；补给有限，加油站与食宿尽早安排", "tips": ["辫状河日落：站桥面或桥头高地用200mm挑沙洲分汊，落日烧水线最壮观", "清晨河雾：日出前到桥头，长焦收雾中牛群过滩剪影"], "story": "长江正源沱沱河沿，各拉丹冬姜根迪如冰川的融水在此铺成无边的辫状河；1999年『长江源』环保纪念碑立于桥头，长江从这里开始才被称为长江。", "subs": [{"n": "长江源纪念碑·桥头", "lon": 92.433, "lat": 34.217, "yaw": 90, "tip": "桥头纪念碑配辫状河全景：日落侧逆光，广角低角度把碑与水系同框"}, {"n": "沱沱河大桥·辫状水系", "lon": 92.433, "lat": 34.217, "yaw": 270, "tip": "桥面向西拍分汊沙洲：7–8月丰水多汊最壮观，中长焦层层递进"}, {"n": "唐古拉山镇·高原驿站街景", "lon": 92.433, "lat": 34.217, "yaw": 0, "tip": "『长江源头第一镇』街拍：晨光里货车队与赶早牧民，35mm人文纪实"}]}, {"id": 13, "name": "唐古拉山口", "region": "通天河段", "lon": 91.926, "lat": 32.869, "alt": 5231, "cat": "cloud", "themes": ["cloud", "culture"], "win": "全年可拍；6–9月相对稳定、午后多雷雨云须早到；9–10月初雪后山脊线最美；11–次年4月风雪封路风险高", "note": "垭口海拔5231米，青藏公路最高点、青海与西藏的天然分界，距安多约90余公里；含氧量约为海平面一半，停留以15–20分钟为限、勿奔跑跳跃；冬季与风吹雪时段常临时交通管制，行前必查当日路况；附近的109道班（K3352一带，海拔近5100米）被誉为『天下第一道班』", "tips": ["垭口标志碑+经幡阵：上午顺光，人物动作放缓、拍摄与致意一气呵成", "南望安多草原雪山层：云隙光扫过草甸时用长焦抽层，防风三脚架+重物压稳"], "story": "青藏公路5231米的最高点，翻过垭口便从长江流域进入怒江与藏北内流水系；守在近5100米的109道班养护工人，是这条天路最沉默的注脚。", "subs": [{"n": "5231垭口·标志碑与经幡", "lon": 91.926, "lat": 32.869, "yaw": 0, "tip": "碑体正面顺光位：低角度广角收碑、经幡与远山三层，快门1/500s凝乱幡"}, {"n": "垭口南望·安多草原视点", "lon": 91.926, "lat": 32.869, "yaw": 180, "tip": "南向下坡弯道配草原纵深：午后云影最有戏，长焦80–200mm抽山脊层次"}]}, {"id": 14, "name": "安多·错那湖", "region": "羌塘段", "lon": 91.68, "lat": 32.27, "alt": 4800, "cat": "lake", "themes": ["lake", "cloud"], "win": "全年可拍；8月环湖草原最绿、油菜与格桑点缀；9–10月湖水蓝绿对比最强；冬季湖面封冻、雪原极简", "note": "安多县城帕那镇海拔约4800米（资料亦有约4700米之说），全县平均海拔约5200米；错那湖（海拔4800米）在县城东南，湖滨为牧民草场，拍摄走公路与既有观景位、勿辗压草皮；县域属那曲至格尔木限速严格段", "tips": ["错那湖蓝绿渐变：正午前后顺光湖水最蓝，偏振镜压反光、广角收湖岸曲线", "8月草原花季晨拍：露水未干时逆光低角度，花穗挂珠做前景"], "story": "『安多』藏语意为末尾或下部，是从青海进入西藏的第一县；错那湖是怒江的源头湖，青藏铁路在湖畔最近处与圣湖擦肩而过。", "subs": [{"n": "错那湖·湖湾观景位", "lon": 91.488, "lat": 32.029, "yaw": 0, "tip": "湖东南公路近湖段观景位：上午顺光湖色最饱和，长焦收对岸雪山倒影"}, {"n": "帕那镇·安多县城", "lon": 91.68, "lat": 32.27, "yaw": 90, "tip": "县城晨集与转经人流：全镇海拔约4800米、行程放缓，清晨35mm扫街后再上路"}]}, {"id": 15, "name": "那曲·羌塘草原（恰青赛马）", "region": "羌塘段", "lon": 92.05, "lat": 31.47, "alt": 4507, "cat": "culture", "themes": ["culture", "cloud"], "win": "全年可拍；8月恰青赛马艺术节（近年固定8月10日前后开幕）为全年人文峰值；6–9月草原绿季云量最富戏剧性；冬季藏北雪原苍茫", "note": "那曲镇海拔约4507米（市域平均海拔4500米以上），全线城镇中高反感明显，住宿选有供氧房型更稳；赛马节期间场馆周边人多车堵，提前占机位、拍人先问；G109过境段大货车极多", "tips": ["赛马场长焦守决骤：400mm+1/2000s凝马上拾哈达，逆光扬尘出氛围", "孝登寺晨拍辩经与转经：晨光斜射金顶时顺光，人物纪实先致意"], "story": "羌塘草原腹地的黑河牧场，『那曲』即黑河之意；延续吐蕃以来的赛马传统，一年一度的恰青赛马艺术节是藏北最盛大的草原嘉年华。", "subs": [{"n": "那曲镇·孝登寺", "lon": 92.05, "lat": 31.47, "yaw": 90, "tip": "镇内大寺金顶与转经廊：清晨顺光拍金顶，法会期间纪实先问再拍"}, {"n": "赛马场·恰青艺术节会场", "lon": 92.05, "lat": 31.47, "yaw": 270, "tip": "镇侧赛马场（艺术节主会场）：8月长焦守骑手腾空，观众席色块用中焦抽色"}]}, {"id": 16, "name": "纳木错·扎西半岛", "region": "羌塘段", "lon": 90.89, "lat": 30.778, "alt": 4718, "cat": "lake", "themes": ["lake", "cloud", "culture"], "win": "5–10月最佳：5月开湖碎冰奇观、7–8月草甸花海、9月蓝到极致；11月–次年4月那根拉山口大雪常致景区临时关闭（当日路况必查），湖面封冻另有一派冰湖景观", "note": "湖面海拔4718米，扎西半岛在纳木错东南岸，需从当雄经那根拉山口（约5190米）盘山进入，当日往返或宿半岛板房；半岛住宿海拔高、条件简，高反者建议当日往返；湖滨圣湖礼仪：不洗物、不喧哗、顺时针转半岛", "tips": ["扎西半岛日出：迎宾石—合掌石沿线选前景，日出方位正对湖面，16–35mm+ND渐变", "那根拉山口回望：下山方向回拍纳木错纵深，长焦收湖岸月牙湾", "银河季（5–9月）半岛几乎零光害：银河拱桥跨湖面，星空赤道仪或高感机身"], "story": "藏语『天湖』，与羊卓雍错、玛旁雍错并称西藏三大圣湖；扎西半岛的合掌石与垒垒玛尼堆，见证千余年来转湖朝圣者的足迹。", "subs": [{"n": "扎西半岛·迎宾石日出位", "lon": 90.89, "lat": 30.778, "yaw": 90, "tip": "半岛西侧石滩正对日出：金山倒影+迎宾石剪影，日出前40分钟占位"}, {"n": "那根拉山口·回望天湖", "lon": 91.105, "lat": 30.685, "yaw": 0, "tip": "山口北望纳木错全景（山口海拔约5190米）：上午顺光湖蓝最纯，下山弯道处停车入观景带"}, {"n": "湖湾·纳木错站一带", "lon": 90.988, "lat": 30.774, "yaw": 270, "tip": "东南岸湖湾日落位：日落烧湖配念青唐古拉雪山剪影，中长焦收湾线"}]}, {"id": 17, "name": "当雄·念青唐古拉", "region": "拉萨段", "lon": 91.1, "lat": 30.48, "alt": 4200, "cat": "cloud", "themes": ["cloud", "culture"], "win": "全年可拍；9–10月能见度最高、主峰金山最稳；6–8月河谷青稞与草甸绿浪；冬季雪峰雾凇配温泉蒸汽", "note": "当雄县城（当曲卡镇）海拔约4200米，县域平均海拔4200米；念青唐古拉主峰（7162米）在公路西侧山系深处，观测点在G109沿线观景带；县城往纳木错方向出入注意那根拉段天气窗口", "tips": ["主峰金山：日落后十余分钟雪峰染金，400mm级长焦从县城以北观景带西望", "河谷晨雾：青稞季（7–8月）清晨逆光拍雾带缠山根，广角带田埂线"], "story": "『当雄』意为挑选出来的草场，是拉萨的北大门与羌塘草原的南缘；念青唐古拉与纳木错是藏区最著名的神山圣湖配偶组合，山湖相依的传说在这里代代相传。", "subs": [{"n": "当雄以北·念青唐古拉观景段", "lon": 91.1, "lat": 30.48, "yaw": 270, "tip": "G109沿线西侧望主峰方向：晴日傍晚金山+旗云，长焦压缩山脊冰川"}, {"n": "当曲卡镇·河谷晨景", "lon": 91.1, "lat": 30.48, "yaw": 90, "tip": "县城河谷晨雾与出牧：日出前到镇东侧高地，35mm收炊烟与牛群转场"}]}, {"id": 18, "name": "羊八井·地热与峡谷", "region": "拉萨段", "lon": 90.422, "lat": 30.0, "alt": 4300, "cat": "cloud", "themes": ["cloud", "culture"], "win": "全年可拍；冬季（11–2月）清晨蒸汽最浓、雪山冷冽背景对比最强；夏季青稞黄熟（8–9月）配白汽别有暖调", "note": "羊八井镇海拔约4300米，地热田区按标识通行、勿踏入热池与管区；青藏铁路与G109在此并行穿峡谷，公路弯多重车多，拍摄入硬化停车带；至拉萨约90公里，出峡谷后注意区间测速", "tips": ["蒸汽田逆光：-10℃以下清晨，逆光位白汽成半透明幕，雪山做冷背景", "峡谷公路车流：蓝调时刻慢门收车灯轨迹与铁路桥灯带同框"], "story": "中国第一座地热电站所在地，地下热汽在雪原上终年升腾；青藏铁路以连续隧道穿越羊八井峡谷，天路工程与地热奇观在此同框。", "subs": [{"n": "地热蒸汽田·电厂一带", "lon": 90.422, "lat": 30.0, "yaw": 270, "tip": "镇西侧蒸汽升腾区外缘：清晨逆光拍白汽雪原，200mm抽汽柱与雪山层次"}, {"n": "羊八井峡谷·公路铁路并行段", "lon": 90.422, "lat": 30.0, "yaw": 90, "tip": "峡谷南口弯道高位：蓝调慢门收车轨，等列车过桥时连拍天路与公路交汇"}]}];
+var LODGING = [{"n": "扎西半岛湖畔板房旅馆", "lon": 90.89, "lat": 30.778, "type": "圣湖板房/帐篷旅馆", "tip": "住处本身即机位：4718米湖边开门即日出金山与银河下的玛尼堆，旺季（7–8月）需提前多日预订；夜温可至0℃上下，高反未适应者慎宿湖畔第一夜"}, {"n": "黑马河镇湖畔藏式客栈", "lon": 99.77, "lat": 36.72, "type": "藏式客栈", "tip": "步行十分钟即青海湖西岸湖滩日出位，免摸黑赶路；7–8月油菜花季房价翻倍，越早订越好"}];
+var LOCAL = [{"n": "那曲恰青赛马艺术节（羌塘赛马节）", "type": "民族节庆", "region": "羌塘段·那曲镇", "month": "公历8月（近年固定8月10日前后开幕，赛期约一周）", "tip": "马上拾哈达、疾驰套牛与万人锅庄同场，藏北最盛大的草原嘉年华；400mm以上守骑手腾空瞬间，观众密集先问后拍", "lon": 92.05, "lat": 31.47}, {"n": "环青海湖国际公路自行车赛", "type": "体育赛事", "region": "河湟环湖段·青海湖沿线", "month": "公历7月中下旬（每年赛程微调，以官方公告为准）", "tip": "车队掠过油菜花海与湖岸经幡是青海夏季标志性画面；提前查赛段封路时间占位，慢门横摇（panning 1/30s左右）出速度感", "lon": 99.77, "lat": 36.72}, {"n": "藏历新年（洛萨）", "type": "民俗节庆", "region": "羌塘段·安多/那曲沿线城镇", "month": "藏历正月初一 ≈ 公历1月下旬–3月上旬间浮动（逐年不同）", "tip": "牧区盛装、辫套与古突夜火供烟是沿线最浓的人文现场；街头纪实35mm，进寺拍法会先问规矩", "lon": 92.05, "lat": 31.47}, {"n": "风干牦牛肉与酥油茶", "type": "美食", "region": "通天河段·沱沱河—唐古拉沿线牧户", "month": "冬季风干制作 ≈ 11月–次年2月，全年可尝", "tip": "牧户帐篷里逆光拍奶茶蒸汽与风干肉架，色温偏暖；做客先喝一碗茶再举相机", "lon": 92.43, "lat": 34.22}, {"n": "手抓羊肉与老酸奶", "type": "美食", "region": "河湟环湖段·黑马河—倒淌河集镇", "month": "全年（7–8月环湖旅游季集市最盛）", "tip": "清晨集镇打奶、炸馓子是最生动的画面；当地酸奶覆黄色奶皮，晨侧光下拍食先拍人"}];
+var ROUTE = [[36.62, 101.78], [36.68, 101.34], [36.43, 101.17], [36.44, 100.98], [36.72, 99.77], [36.76, 99.08], [36.3, 98.09], [36.42, 96.4], [36.4, 94.9], [35.88, 94.57], [35.75, 94.31], [35.65, 94.07], [35.52, 93.92], [35.22, 93.08], [34.22, 92.43], [33.7, 92.3], [32.87, 91.93], [32.27, 91.68], [32.03, 91.49], [31.8, 91.7], [31.47, 92.05], [30.69, 91.11], [30.48, 91.1], [30.0, 90.42], [29.65, 91.13]];
+var ROUTE_NAME = "G109";
+var REGION_ORDER = ["河湟环湖段", "柴达木段", "昆仑段", "可可西里段", "通天河段", "羌塘段", "拉萨段"];
+
+var map = L.map('map', { zoomControl:true, minZoom:5, maxZoom:18 }).setView([33.5, 92.5], 6);
+var sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  { maxZoom:18, attribution:'影像 © Esri, Maxar, Earthstar Geographics' }).addTo(map);
+var topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+  { maxZoom:17, subdomains:'abc', attribution:'© OpenStreetMap 贡献者, SRTM | © OpenTopoMap (CC-BY-SA)' });
+var osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  { maxZoom:19, attribution:'© OpenStreetMap 贡献者' });
+L.control.layers({'卫星影像':sat,'等高线地形':topo,'OSM 街道':osm}, null, {position:'topright'}).addTo(map);
+L.control.scale({imperial:false, position:'bottomleft'}).addTo(map);
+
+function coordTxt(lat, lon){ return lat.toFixed(4) + ', ' + lon.toFixed(4); }
+function amapLink(s){ return 'https://uri.amap.com/search?keyword=' + encodeURIComponent(s.name.replace(/（.*?）/g,'')); }
+function copyBtn(t){ return '<button data-cp="' + t + '">复制坐标</button>'; }
+function bearingDeg(la1, lo1, la2, lo2){
+  var y = Math.sin((lo2-lo1)*Math.PI/180) * Math.cos(la2*Math.PI/180);
+  var x = Math.cos(la1*Math.PI/180)*Math.sin(la2*Math.PI/180) - Math.sin(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.cos((lo2-lo1)*Math.PI/180);
+  return Math.atan2(y,x)*180/Math.PI;
+}
+function subDefaultYaw(s, u){
+  var i = s.subs.indexOf(u), t = s.subs[i+1] || s.subs[i-1];
+  return t ? (bearingDeg(u.lat, u.lon, t.lat, t.lon) + 360) % 360 : 0;
+}
+function allTargets(){
+  var a = [];
+  SPOTS.forEach(function(s){
+    a.push({name:s.name, lat:s.lat, lon:s.lon});
+    s.subs.forEach(function(u){ a.push({name:u.n, lat:u.lat, lon:u.lon}); });
+  });
+  return a;
+}
+function parkPopup(s){
+  var h = '<div class="pp-name">' + s.name + (s.g5 ? '<span class="badge b5a">5A</span>' : '') + (s.np ? '<span class="badge bnp">国家公园</span>' : '') + '</div>'
+    + '<div class="pp-region">' + s.region + (s.alt ? ' · ' + s.alt : '') + '</div>'
+    + (s.story ? '<div class="pp-story">' + s.story + '</div>' : '')
+    + (s.note ? '<div class="pp-note">' + s.note + '</div>' : '')
+    + '<div class="pp-row"><b class="k">最佳窗口</b>　' + s.win + '</div>'
+    + '<div class="pp-row"><b class="k">题材</b>　' + s.themes.map(function(t){return CAT[t].label;}).join(' / ') + '</div>'
+    + '<div class="pp-coord"><span>' + coordTxt(s.lat, s.lon) + '</span>' + copyBtn(coordTxt(s.lat, s.lon)) + '</div>'
+    + (s.tips ? '<ul class="pp-tips">' + s.tips.map(function(t){ return '<li>' + t + '</li>'; }).join('') + '</ul>' : '')
+    + '<div class="pp-row"><b class="k">小景点（' + s.subs.length + '）</b></div>'
+    + '<ul class="pp-subs">' + s.subs.map(function(u){ return '<li>' + u.n + '</li>'; }).join('') + '</ul>'
+    + '<div class="pp-links"><a href="' + amapLink(s) + '" target="_blank" rel="noopener">高德地图导航 →</a><a href="https://cn.bing.com/maps?q=' + coordTxt(s.lat, s.lon) + '" target="_blank" rel="noopener">Bing 卫星对照 →</a></div>';
+  return h;
+}
+function subPopup(s, u){
+  var yaw = u.yaw != null ? u.yaw : subDefaultYaw(s, u);
+  return '<div class="pp-name" style="font-size:14px">' + u.n + '</div>'
+    + '<div class="pp-region">' + s.name + ' · 小景点/机位</div>'
+    + '<div class="pp-coord"><span>' + coordTxt(u.lat, u.lon) + '</span>' + copyBtn(coordTxt(u.lat, u.lon)) + '</div>'
+    + (u.km ? '<div class="pp-row"><b class="k">里程桩</b>　' + u.km + '</div>' : '')
+    + '<div class="pp-row"><b class="k">机位要点</b>　' + u.tip + '</div>'
+    + '<div style="margin:7px 0 4px"><button class="p3dopen" data-lat="' + u.lat + '" data-lon="' + u.lon + '" data-name="' + u.n + '" data-yaw="' + yaw.toFixed(0) + '">👁 人视模拟 · 环顾山形</button></div>'
+    + '<div class="pp-links"><a href="https://cn.bing.com/maps?q=' + coordTxt(u.lat, u.lon) + '" target="_blank" rel="noopener">Bing 卫星对照 →</a></div>';
+}
+function stayPopup(u){
+  return '<div class="pp-name" style="font-size:14px;color:#862e9c">🛖 ' + u.n + '</div>'
+    + '<div class="pp-region">异形住宿 · ' + u.type + '</div>'
+    + '<div class="pp-coord"><span>' + coordTxt(u.lat, u.lon) + '</span>' + copyBtn(coordTxt(u.lat, u.lon)) + '</div>'
+    + '<div class="pp-row"><b class="k">要点</b>　' + u.tip + '</div>'
+    + '<div class="pp-links"><a href="https://cn.bing.com/maps?q=' + coordTxt(u.lat, u.lon) + '" target="_blank" rel="noopener">Bing 卫星对照 →</a></div>';
+}
+function localPopup(u){
+  return '<div class="pp-name" style="font-size:14px;color:#8a5a00">✦ ' + u.n + '</div>'
+    + '<div class="pp-region">地方特色 · ' + u.type + (u.month ? ' · ' + u.month : '') + '</div>'
+    + (u.region ? '<div class="pp-region">' + u.region + '</div>' : '')
+    + (u.lon != null ? '<div class="pp-coord"><span>' + coordTxt(u.lat, u.lon) + '</span>' + copyBtn(coordTxt(u.lat, u.lon)) + '</div>' : '')
+    + '<div class="pp-row" style="line-height:1.55">' + u.tip + '</div>';
+}
+var markers = {}, subLayers = {}, stayLayer = L.layerGroup(), localLayer = L.layerGroup();
+var tipSubs = [];   /* 自动标注：公园名 z≥8，机位名 z≥12 */
+SPOTS.forEach(function(s){
+  var c = CAT[s.cat].color;
+  var icon = L.divIcon({ className:'', iconSize:[24,24], iconAnchor:[12,12], popupAnchor:[0,-12],
+    html:'<div style="width:24px;height:24px;border-radius:50%;background:'+c+';color:#fff;font:700 12px/24px PingFang SC,Microsoft YaHei,sans-serif;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.45),0 0 0 2.5px #fff">' + s.id + '</div>' });
+  markers[s.id] = L.marker([s.lat, s.lon], {icon:icon, title:s.name}).addTo(map)
+    .bindPopup(parkPopup(s), {maxWidth:295})
+    .bindTooltip(s.name, {direction:'right', className:'slabel', offset:[8,-6]});
+  tipSubs.push(markers[s.id]);
+  var g = L.layerGroup();
+  var line = s.subs.map(function(u){ return [u.lat, u.lon]; });
+  L.polyline(line, {color:c, weight:2.5, opacity:.8, dashArray:'6 7'})
+    .bindTooltip(s.name + ' 游览/拍摄线').addTo(g);
+  s.subs.forEach(function(u){
+    var di = L.divIcon({ className:'', iconSize:[15,15], iconAnchor:[7.5,7.5], popupAnchor:[0,-8],
+      html:'<div style="width:15px;height:15px;border-radius:50%;background:'+c+';opacity:.92;box-shadow:0 0 0 2px #fff,0 1px 3px rgba(0,0,0,.4)"></div>' });
+    var _m = L.marker([u.lat, u.lon], {icon:di, title:u.n}).addTo(g)
+      .bindPopup(subPopup(s, u), {maxWidth:280})
+      .bindTooltip(u.n, {direction:'right', className:'slabel', offset:[7,-5]});
+    tipSubs.push(_m);
+  });
+  subLayers[s.id] = g;
+});
+LODGING.forEach(function(u){
+  var di = L.divIcon({ className:'', iconSize:[18,18], iconAnchor:[9,9], popupAnchor:[0,-9],
+    html:'<div style="width:18px;height:18px;transform:rotate(45deg);background:#9c36b5;opacity:.94;box-shadow:0 0 0 2px #fff,0 1px 3px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(-45deg);color:#fff;font:700 11px/1 sans-serif">🛖</span></div>' });
+  L.marker([u.lat, u.lon], {icon:di, title:u.n}).bindPopup(stayPopup(u), {maxWidth:280}).addTo(stayLayer);
+});
+if (LODGING.length) stayLayer.addTo(map);
+if (ROUTE.length > 1) {
+  L.polyline(ROUTE, {color:'#5c4a1a', weight:4, opacity:.85})
+    .bindTooltip(ROUTE_NAME + ' 走向（示意）').addTo(map);
+}
+LOCAL.forEach(function(u){
+  if (u.lon == null) return;
+  var di = L.divIcon({ className:'', iconSize:[18,18], iconAnchor:[9,9], popupAnchor:[0,-9],
+    html:'<div style="width:18px;height:18px;border-radius:50%;background:#f5e6c8;border:2px solid #8a5a00;box-shadow:0 1px 3px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;color:#8a5a00;font:700 11px/1 sans-serif">✦</div>' });
+  L.marker([u.lat, u.lon], {icon:di, title:u.n}).bindPopup(localPopup(u), {maxWidth:280}).addTo(localLayer);
+});
+if (LOCAL.some(function(u){ return u.lon != null; })) localLayer.addTo(map);
+
+var _gbPts = SPOTS.concat(LODGING).map(function(s){ return [s.lat, s.lon]; });
+if (ROUTE.length > 1) _gbPts = _gbPts.concat(ROUTE);
+var gb = L.latLngBounds(_gbPts);
+function fitAll(){ map.invalidateSize(); map.setView(gb.getCenter(), map.getBoundsZoom(gb, true, L.point(46,46)), {animate:false}); }
+fitAll();
+window.addEventListener('load', function(){ setTimeout(fitAll, 80); });
+setTimeout(fitAll, 600);
+
+function syncSubLayers(){
+  var show = map.getZoom() >= 11;
+  SPOTS.forEach(function(s){
+    var g = subLayers[s.id];
+    var pass = curFilter === 'all' || s.themes.indexOf(curFilter) >= 0;
+    var want = show && pass;
+    if (want) { if (!map.hasLayer(g)) g.addTo(map); }
+    else if (map.hasLayer(g)) map.removeLayer(g);
+  });
+}
+map.on('zoomend', syncSubLayers);
+function syncTips(){
+  var z = map.getZoom();
+  tipSubs.forEach(function(m){
+    var isSub = m.getIcon && m.getIcon().options.iconSize && m.getIcon().options.iconSize[0] <= 15;
+    var want = z >= (isSub ? 12 : 8);
+    if (want && map.hasLayer(m)) m.openTooltip(); else m.closeTooltip();
+  });
+}
+map.on('zoomend', syncTips);
+
+var curFilter = 'all';
+var chipsEl = document.getElementById('chips');
+var listEl = document.getElementById('list');
+function buildChips(){
+  chipsEl.innerHTML = '';
+  var all = [['all','全部']].concat(Object.keys(CAT).map(function(k){ return [k, CAT[k].label]; }));
+  all.forEach(function(p){
+    var d = document.createElement('span');
+    d.className = 'chip' + (curFilter === p[0] ? ' on' : '');
+    d.textContent = p[1];
+    if (curFilter === p[0] && p[0] !== 'all') d.style.background = CAT[p[0]].color;
+    else if (curFilter === p[0]) d.style.background = 'var(--ink)';
+    d.onclick = function(){ curFilter = p[0]; render(); };
+    chipsEl.appendChild(d);
+  });
+}
+function regionKey(s){
+  for (var i = 0; i < REGION_ORDER.length; i++) if (s.region.indexOf(REGION_ORDER[i]) >= 0) return REGION_ORDER[i];
+  return '其他';
+}
+function buildList(){
+  listEl.innerHTML = '';
+  var groups = {};
+  SPOTS.forEach(function(s){
+    if (curFilter !== 'all' && s.themes.indexOf(curFilter) < 0) return;
+    var k = regionKey(s);
+    (groups[k] = groups[k] || []).push(s);
+  });
+  REGION_ORDER.concat(['其他']).forEach(function(rg){
+    if (!groups[rg] || !groups[rg].length) return;
+    var g = document.createElement('div'); g.className = 'grp'; g.textContent = rg;
+    listEl.appendChild(g);
+    groups[rg].forEach(function(s){
+      var d = document.createElement('div'); d.className = 'item'; d.dataset.pid = s.id;
+      var row = document.createElement('div'); row.className = 'row';
+      row.innerHTML = '<div class="num" style="background:' + CAT[s.cat].color + '">' + s.id + '</div>'
+        + '<div><div class="nm">' + s.name + (s.g5 ? '<span class="badge b5a">5A</span>' : '') + (s.np ? '<span class="badge bnp">国家公园</span>' : '') + '</div>'
+        + '<div class="meta">' + s.win + '</div></div>'
+        + '<div class="arrow">▶</div>';
+      d.appendChild(row);
+      var subs = document.createElement('div'); subs.className = 'subs'; subs.style.setProperty('--sc', CAT[s.cat].color);
+      s.subs.forEach(function(u){
+        var r = document.createElement('div'); r.className = 'subrow';
+        var yw = u.yaw != null ? u.yaw : subDefaultYaw(s, u);
+        r.innerHTML = '<div class="sn">' + u.n
+          + '<button class="p3dopen" title="人视模拟" data-lat="' + u.lat + '" data-lon="' + u.lon + '" data-name="' + u.n + '" data-yaw="' + yw.toFixed(0) + '">👁 人视</button></div>'
+          + '<div class="st">' + u.tip + '</div>';
+        r.onclick = function(ev){
+          if (ev.target.closest && ev.target.closest('.p3dopen')) return;
+          ev.stopPropagation();
+          map.flyTo([u.lat, u.lon], Math.max(map.getZoom(), 13), {duration:.8});
+          subLayers[s.id].addTo(map);
+          setTimeout(function(){
+            subLayers[s.id].eachLayer(function(ly){
+              if (ly.getLatLng && Math.abs(ly.getLatLng().lat - u.lat) < 1e-6) ly.openPopup();
+            });
+          }, 850);
+        };
+        subs.appendChild(r);
+      });
+      d.appendChild(subs);
+      row.onclick = function(){
+        var open = d.classList.toggle('open');
+        if (open) { map.flyTo([s.lat, s.lon], Math.max(map.getZoom(), 11), {duration:.8}); syncSubLayers(); }
+      };
+      listEl.appendChild(d);
+    });
+  });
+  if (LODGING.length) {
+    var sg = document.createElement('div'); sg.className = 'grp'; sg.textContent = '🛖 异形住宿';
+    listEl.appendChild(sg);
+    LODGING.forEach(function(u){
+      var r = document.createElement('div'); r.className = 'stayrow';
+      r.innerHTML = '<div class="sn">🛖 ' + u.n + '</div><div class="st">' + u.type + ' · ' + u.tip + '</div>';
+      r.onclick = function(){
+        map.flyTo([u.lat, u.lon], 13, {duration:.8});
+        stayLayer.eachLayer(function(ly){
+          if (ly.getLatLng && Math.abs(ly.getLatLng().lat - u.lat) < 1e-6) ly.openPopup();
+        });
+      };
+      listEl.appendChild(r);
+    });
+  }
+  if (LOCAL.length) {
+    var lg = document.createElement('div'); lg.className = 'grp'; lg.textContent = '✦ 地方特色 · 节庆风物';
+    listEl.appendChild(lg);
+    LOCAL.forEach(function(u){
+      var r = document.createElement('div'); r.className = 'stayrow';
+      r.style.borderLeftColor = '#8a5a00'; r.style.background = '#faf6ec';
+      r.innerHTML = '<div class="sn" style="color:#8a5a00">✦ ' + u.n + (u.month ? ' <span style="font-weight:400;color:#a08a5a">(' + u.month + ')</span>' : '') + '</div>'
+        + '<div class="st">' + u.type + (u.region ? ' · ' + u.region : '') + ' · ' + u.tip + '</div>';
+      r.onclick = function(){
+        if (u.lon == null) return;
+        map.flyTo([u.lat, u.lon], 11, {duration:.8});
+        localLayer.eachLayer(function(ly){
+          if (ly.getLatLng && Math.abs(ly.getLatLng().lat - u.lat) < 1e-6) ly.openPopup();
+        });
+      };
+      listEl.appendChild(r);
+    });
+  }
+  if (!listEl.children.length) listEl.innerHTML = '<div style="font-size:12px;color:var(--sub);padding:20px 4px">该题材暂无点位</div>';
+}
+function syncMarkers(){
+  SPOTS.forEach(function(s){
+    var show = curFilter === 'all' || s.themes.indexOf(curFilter) >= 0;
+    if (show) { if (!map.hasLayer(markers[s.id])) markers[s.id].addTo(map); }
+    else if (map.hasLayer(markers[s.id])) map.removeLayer(markers[s.id]);
+  });
+}
+function render(){ buildChips(); buildList(); syncMarkers(); syncSubLayers(); }
+render();
+
+document.addEventListener('click', function(e){
+  var b = e.target.closest ? e.target.closest('button[data-cp]') : null;
+  if (!b) return;
+  var txt = b.getAttribute('data-cp');
+  function done(){ b.textContent = '已复制'; setTimeout(function(){ b.textContent = '复制坐标'; }, 1400); }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, done);
+  else { var ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(x){} document.body.removeChild(ta); done(); }
+});
+document.addEventListener('click', function(e){
+  var b = e.target.closest ? e.target.closest('.p3dopen') : null;
+  if (!b) return;
+  if (!window.QIN || !QIN.pano) return;
+  map.closePopup();
+  QIN.pano.open({
+    name: b.getAttribute('data-name'),
+    lat: +b.getAttribute('data-lat'), lon: +b.getAttribute('data-lon'),
+    yaw: +b.getAttribute('data-yaw') || 0,
+    targets: allTargets()
+  });
+});
+</script>
+</body>
+</html>

@@ -27,6 +27,14 @@ header .stats{color:var(--mut);font-size:13px}
 #q:focus{border-color:var(--acc);background:#fff;box-shadow:0 0 0 3px rgba(66,99,235,.12)}
 #q::placeholder{color:#9aa7ba}
 
+/* ---- 诗词 ---- */
+.poemline{margin:6px 0 0;background:#f6f3fb;border-left:3px solid #845ef7;border-radius:0 6px 6px 0;
+  padding:5px 9px;font-family:Georgia,"Songti SC",serif;font-size:13px;color:#3b2f63;line-height:1.6}
+.poemline .pa{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:11px;color:#868e96;margin-left:8px}
+.m-poems p{margin:6px 0;background:#f6f3fb;border-left:3px solid #845ef7;border-radius:0 6px 6px 0;
+  padding:6px 10px;font-family:Georgia,"Songti SC",serif;font-size:14px;color:#3b2f63;line-height:1.7}
+.m-poems p span{display:block;font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:11.5px;color:#868e96;margin-top:3px}
+
 /* ---- 布局 ---- */
 .wrap{display:flex;gap:20px;max-width:1380px;margin:0 auto;padding:18px 22px 60px}
 aside{width:248px;flex:none;position:sticky;top:72px;max-height:calc(100vh - 90px);
@@ -246,7 +254,9 @@ function snippet(s, q){
   if(!q) return null;
   var fields = [
     ['名称', s.name], ['窗口', s.win],
-    ['文化历史', s.hist.join(' ')], ['风土人情', s.folk.join(' ')],
+    ['文化历史', s.hist.join(' ')],
+    ['唐宋诗词', s.poems.map(function(x){ return x.a + ' ' + x.t + ' ' + x.l; }).join(' ')],
+    ['风土人情', s.folk.join(' ')],
     ['机位', s.shots.map(function(x){ return x.n + ' ' + x.tip; }).join(' ')],
     ['地方特色', s.feat.join(' ')], ['实用提示', s.note.join(' ')]
   ];
@@ -317,6 +327,8 @@ function refresh(){
       '<div class="meta">' + esc(s.cat || '') + (th ? ' ｜ ' + th : '') + ' · ' +
       s.shots.length + ' 机位</div>' +
       '<div class="win">' + hl(s.win || '', state.q) + '</div>' +
+      (s.poems.length ? '<div class="poemline">『' + hl(s.poems[0].l, state.q) + '』<span class="pa">—— ' +
+        esc(s.poems[0].a) + '《' + esc(s.poems[0].t) + '》</span></div>' : '') +
       (snip ? '<div class="snip">' + snip + '</div>' : '') +
       '</div>';
   }).join('');
@@ -344,6 +356,11 @@ function openDetail(key, id){
 
   var h = '<div class="win"><b>最佳窗口</b>　' + esc(s.win) + '</div>';
   h += '<h3>文化历史</h3>' + s.hist.map(function(x){ return '<p>' + esc(x) + '</p>'; }).join('');
+  if(s.poems.length){
+    h += '<h3>唐宋诗词</h3><div class="m-poems">' + s.poems.map(function(x){
+      return '<p>『' + esc(x.l) + '』<span>—— ' + esc(x.a) + '《' + esc(x.t) + '》· ' + esc(x.d) + '</span></p>';
+    }).join('') + '</div>';
+  }
   h += '<h3>风土人情</h3>' + s.folk.map(function(x){ return '<p>' + esc(x) + '</p>'; }).join('');
   h += '<h3>出片要点</h3>';
   h += s.tips.length ? '<ul>' + s.tips.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '';
@@ -360,7 +377,7 @@ function openDetail(key, id){
   h += '<h3>实用提示</h3>' + s.note.map(function(x){ return '<p>' + esc(x) + '</p>'; }).join('');
   h += '<div class="foot">' +
     (p.map ? '<a href="' + p.map + '">🗺 在地图中打开 ' + esc(p.cn) + '</a>' : '') +
-    '<a href="docs/spots/' + p.key + '.md">📄 查看 Markdown 源文档</a></div>';
+    '<a href="../docs/spots/' + p.key + '.md'>📄 查看 Markdown 源文档</a></div>';
   $('m-body').innerHTML = h;
   $('modal').classList.add('open');
   $('modal').scrollTop = 0;
@@ -390,7 +407,8 @@ $('q').addEventListener('input', function(){
 
 /* ---------- 初始化 ---------- */
 $('hstats').textContent = D.provinces.length + ' 区域 · ' + ALL.length + ' 景区 · ' +
-  ALL.reduce(function(a, it){ return a + it.s.shots.length; }, 0) + ' 机位 · 生成于 ' + D.generated;
+  ALL.reduce(function(a, it){ return a + it.s.shots.length; }, 0) + ' 机位' +
+  (D.poemCount ? ' · ' + D.poemCount + ' 唐宋诗词' : '') + ' · 生成于 ' + D.generated;
 var mh = location.hash.match(/^#([a-z-]+)\.(\d{2})$/);
 if(mh) openDetail(mh[1], mh[2]);
 refresh();

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>广西自然采风 · 摄影地图</title>
+<link rel="stylesheet" href="../lib/leaflet.css">
+<style>
+:root{ --accent:#2b8a3e; --ink:#22304a; --sub:#64748b; --line:#e2e8f0; --bg:#f6f8fb;
+  --bloom:#d6336c; --fall:#0e9aa7; --leaf:#e8590c; --cloud:#7048e8; --lake:#2f9e44; --bird:#1c7ed6; --stay:#9c36b5; }
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;color:var(--ink);background:var(--bg)}
+.layout{display:grid;grid-template-columns:330px 1fr;grid-template-rows:auto 1fr;height:100vh}
+header{grid-column:1/-1;display:flex;align-items:baseline;gap:14px;padding:12px 18px 10px;border-bottom:1px solid var(--line);background:#fff;flex-wrap:wrap}
+header h1{font-family:Georgia,"Songti SC",serif;font-size:21px;color:var(--accent);letter-spacing:.5px}
+header .sub{font-size:12px;color:var(--sub);flex:1}
+header .sub a{color:var(--accent);text-decoration:none}
+header .sub a.cur{font-weight:700;border-bottom:2px solid var(--accent)}
+header a.back{font-size:13px;color:var(--accent);text-decoration:none;border:1px solid var(--accent);border-radius:6px;padding:3px 10px;white-space:nowrap}
+header a.back:hover{background:var(--accent);color:#fff}
+aside{overflow-y:auto;border-right:1px solid var(--line);background:#fff;padding:12px 14px 20px}
+aside h2{font-size:13px;color:var(--sub);font-weight:600;margin:4px 0 8px;letter-spacing:.5px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chip{font-size:12px;padding:3px 10px;border:1px solid var(--line);border-radius:999px;cursor:pointer;background:#fff;user-select:none}
+.chip.on{color:#fff;border-color:transparent}
+.zhint{font-size:11px;color:var(--sub);margin-bottom:8px;line-height:1.5}
+.cal{background:#f0f6ff;border:1px solid #d4e4f7;border-radius:8px;padding:6px 10px;margin-bottom:10px}
+.cal h3{font-size:11px;color:var(--accent);margin-bottom:3px;letter-spacing:1px}
+.cal p{font-size:11px;color:var(--ink);line-height:1.7}
+.cal b{color:var(--accent);font-weight:600}
+.grp{font-size:12px;color:var(--sub);margin:12px 0 4px;font-weight:600;letter-spacing:1px}
+.item{border:1px solid transparent;border-radius:9px;cursor:pointer}
+.item:hover{background:var(--bg)}
+.item .row{display:flex;gap:9px;padding:8px 8px;align-items:flex-start}
+.item .num{flex:none;width:22px;height:22px;border-radius:50%;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px;box-shadow:0 0 0 2px #fff,0 0 0 3.5px rgba(34,48,74,.12)}
+.item .nm{font-size:13.5px;font-weight:600;line-height:1.35}
+.item .meta{font-size:11.5px;color:var(--sub);margin-top:2px;line-height:1.5}
+.item .arrow{flex:none;margin-left:auto;font-size:10px;color:var(--sub);transition:transform .15s;margin-top:4px}
+.item.open .arrow{transform:rotate(90deg)}
+.subs{display:none;padding:0 6px 8px 39px}
+.item.open .subs{display:block}
+.subrow{padding:5px 6px;border-left:2.5px solid var(--sc,#999);margin:3px 0;border-radius:0 6px 6px 0;cursor:pointer;background:#fafbfd}
+.subrow:hover{background:var(--bg)}
+.subrow .sn{font-size:12.5px;font-weight:600}
+.subrow .st{font-size:11px;color:var(--sub);line-height:1.45;margin-top:1px}
+.badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:4px;margin-left:5px;vertical-align:1px}
+.b5a{background:#fff4d6;color:#a06b00;border:1px solid #f0d48a}
+.bnp{background:#e5f0ff;color:#1f5fa8;border:1px solid #bcd4f0}
+.stayrow{padding:6px 8px;border-left:2.5px solid var(--stay);margin:3px 0;border-radius:0 6px 6px 0;background:#fbf6fd}
+.stayrow .sn{font-size:12.5px;font-weight:600;color:#862e9c}
+.stayrow .st{font-size:11px;color:var(--sub);line-height:1.45;margin-top:1px}
+#map{height:100%;background:#dfe6ee;z-index:1}
+.leaflet-container{font-family:inherit}
+.leaflet-popup-content{font-size:13px;line-height:1.6;margin:10px 14px;width:258px!important}
+.pp-name{font-size:15px;font-weight:700}
+.pp-region{color:var(--sub);font-size:12px;margin:2px 0 6px}
+.pp-note{background:#fdf3e7;border:1px solid #f3ddc0;border-radius:6px;padding:5px 9px;font-size:12px;margin:5px 0;color:#7a5200}
+.pp-story{background:#f6f1e4;border-left:3px solid #8a5a00;border-radius:0 6px 6px 0;padding:5px 9px;font-size:12px;margin:5px 0;color:#5c4a1a;line-height:1.55}
+.pp-poems{margin:5px 0}
+.pp-poem{background:#f5f2fa;border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:5px 9px;margin:4px 0}
+.pp-poem .pl{font-family:Georgia,"Songti SC",serif;font-size:12.5px;color:#3b2f63;line-height:1.65}
+.pp-poem .pm{font-size:11px;color:var(--sub);margin-top:2px}
+.pp-row{font-size:12.5px;margin:3px 0}
+.pp-row b.k{color:var(--sub);font-weight:600}
+.pp-coord{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:6px;padding:4px 8px;margin:6px 0;font-variant-numeric:tabular-nums}
+.pp-coord button{border:none;background:var(--accent);color:#fff;font-size:11px;border-radius:5px;padding:2px 8px;cursor:pointer}
+.pp-tips{margin:6px 0 4px;padding-left:17px}
+.pp-tips li{margin:3px 0;font-size:12.5px}
+.pp-subs{margin:5px 0 2px;padding-left:0;list-style:none}
+.pp-subs li{margin:2px 0;font-size:12.5px}
+.pp-subs li:before{content:'▸ ';color:var(--accent)}
+.pp-links{margin-top:8px;display:flex;gap:10px}
+.pp-links a{font-size:12px;color:var(--accent);text-decoration:none;border-bottom:1px dashed var(--accent)}
+.p3dopen{border:1px solid var(--accent);background:#fff;color:var(--accent);font-size:12px;border-radius:6px;padding:2px 10px;cursor:pointer}
+.p3dopen:hover{background:var(--accent);color:#fff}
+.subrow .sn .p3dopen{float:right;font-size:11px;padding:0 7px;line-height:19px;border-radius:5px}
+.slabel{background:transparent!important;border:none!important;box-shadow:none!important;font:600 11px "PingFang SC","Microsoft YaHei",sans-serif;color:#22304a;text-shadow:0 0 3px #fff,0 0 5px #fff,0 0 7px #fff;padding:0;margin:0 0 0 4px!important}
+.leaflet-tooltip.slabel::before{display:none}
+@media (max-width:760px){.layout{grid-template-columns:1fr;grid-template-rows:auto 34vh 1fr}aside{border-right:none;border-bottom:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <header>
+    <h1>广西自然采风 · 摄影地图</h1>
+    <span class="sub">景区 → 小景点 → 机位 三级结构 · 16 景区 52 机位 · 坐标 WGS84 近似参考点，导航以景区大门为准 · <a href="../index.html">← 规划中心</a></span>
+  </header>
+  <aside>
+    <h2>按拍摄题材筛选</h2>
+    <div class="chips" id="chips"></div>
+    <div class="zhint">缩放到 z≥11 展开小景点；🛖 为异形住宿</div>
+    <div class="cal"><h3>季节日历</h3><p><b>4月前后</b> 壮族三月三歌圩（农历三月初三）：武鸣歌圩最盛，全区同庆，山歌与壮锦盛装同框<br><b>5月下–6月上</b> 龙脊灌水全盛（约5月25日–6月10日）：镜面梯田+雨后云海，金坑大寨5月上旬起注水<br><b>春夏雨后</b> 猫儿山/七百弄云海最稳：雨后初晴清晨必守<br><b>6–10月</b> 德天跨国瀑布丰水期（9–10月水稳人少、边关稻田金黄），鹅泉、通灵翠色正浓<br><b>4–11月</b> 涠洲岛海岛季：五彩滩日出、滴水丹屏日落；7–9月台风绕行看海况<br><b>农历六月初六 ≈ 7月上中</b> 龙脊大寨红瑶晒衣节：满寨晒红衣一年一度<br><b>6–9月</b> 漓江/遇龙河晨雾渔火旺季：兴坪日出、相公山云海、竹筏慢门<br><b>9月下–10月中</b> 龙脊金穗翻浪、程阳八寨糯禾挂晒、明仕田园稻浪金黄<br><b>霜降日 ≈ 10月23日</b> 壮族霜降节（天等向都/大新下雷，人类非遗扩展项目）<br><b>12–4月</b> 涠洲岛布氏鲸观鲸季（约70头近岸群体，清晨傍晚最活跃）；寒潮后猫儿山雾凇</p></div>
+    <div id="list"></div>
+  </aside>
+  <div id="map"></div>
+</div>
+
+<script src="../lib/leaflet.js"></script>
+<script src="../js/qinling/dem.js?v=1"></script>
+<script src="../js/qinling/sun.js?v=2"></script>
+<script src="../js/qinling/texture.js?v=2"></script>
+<script src="../js/qinling/pano.js?v=5"></script>
+<script>
+var CAT = {"bloom": {"label": "花海·山花", "color": "#d6336c"}, "fall": {"label": "瀑布溪流", "color": "#0e9aa7"}, "leaf": {"label": "红叶秋色", "color": "#e8590c"}, "cloud": {"label": "云海日出·星空", "color": "#7048e8"}, "lake": {"label": "峡谷水体·地质", "color": "#2f9e44"}, "bird": {"label": "冬季候鸟", "color": "#1c7ed6"}, "culture": {"label": "人文史迹·同框", "color": "#8a5a00"}};
+var SPOTS = [{"id": 1, "name": "桂林漓江（杨堤—兴坪精华段）", "region": "桂林市", "lon": 110.517, "lat": 24.933, "g5": true, "cat": "lake", "themes": ["lake", "cloud", "culture"], "win": "全年可拍；4–9月江水丰盈、雨后晨雾最出片，秋冬通透度高、平流雾更稳；20元人民币背景与黄布倒影以晴日清晨水面最平", "note": "杨堤—兴坪竹筏/游船分段实名购票（官方渠道提前订，暴雨涨水停航）；兴坪码头人流大，日出机位需提前占位；相公山、老寨山为私人或步道制高点，注意开放时间", "tips": ["相公山是漓江日出第一机位：面向东方江曲，云海漫江时群峰如岛，日出前40分钟到平台占三脚架位", "渔火与鸬鹚多为摆拍项目：与渔翁提前商定造型与光位，逆光剪影最经典", "秋冬晨雾稳：老寨山俯瞰大河背江湾，黄昏金光洒江与晨雾两场都值得守"], "story": "韩愈写下『江作青罗带，山如碧玉簪』写尽漓江；2014年桂林喀斯特作为『中国南方喀斯特』二期列入世界自然遗产，第五套20元人民币背面即取景于兴坪黄布倒影河段。", "poems": [{"t": "送桂州严大夫", "a": "韩愈", "d": "唐", "l": "江作青罗带，山如碧玉篸。"}, {"t": "寄杨五桂州谭", "a": "杜甫", "d": "唐", "l": "五岭皆炎热，宜人独桂林。"}], "subs": [{"n": "相公山观景台", "lon": 110.479, "lat": 24.926, "yaw": 95, "tip": "漓江西岸制高点俯瞰九马画山河曲：云海日出标志机位，雨后初晴概率最高，长焦截远峰层叠"}, {"n": "九马画山", "lon": 110.491, "lat": 24.938, "yaw": 260, "tip": "巨大石壁天然成画『看出七匹中榜眼，看出九匹状元郎』：江面仰观壁面纹理，正午顶光壁面最亮"}, {"n": "黄布倒影（20元人民币背景）", "lon": 110.517, "lat": 24.925, "yaw": 180, "tip": "官方打卡河段：无风清晨水面如镜、峰丛倒影上下对称，上午顺光色彩最正"}, {"n": "兴坪古镇·老寨山", "lon": 110.521, "lat": 24.918, "yaw": 135, "tip": "石阶约30分钟登顶俯瞰漓江大拐弯：黄昏金光洒江最出片；日本老人林克之义务修山道二十余年的故事为机位添人情"}]}, {"id": 2, "name": "阳朔遇龙河（含十里画廊）", "region": "桂林市", "lon": 110.43, "lat": 24.79, "cat": "lake", "themes": ["lake", "culture"], "win": "全年；4–10月竹筏季（暴雨汛期停航）；3月油菜花点缀田垌，9–10月稻田金黄，晨雾山水倒影最佳", "note": "国家4A级景区、国家级旅游度假区；竹筏分段售票（金龙桥—旧县、旧县—工农桥等段），人工撑筏顺流约2小时；十里画廊骑行注意大车", "tips": ["工农桥日落实为遇龙河名片：竹筏前景+骆驼过江峰丛剪影，慢门拉出行迹", "上段（金龙桥—旧县）人少水静，倒影与孤筏题材更好", "月亮山长焦压缩月洞与稻田，黄昏洞壁透光最立体"], "story": "『小漓江』遇龙河是漓江在阳朔的最大支流，两岸峰丛田园保存着最完整的喀斯特乡村图景；明代遇龙桥横卧碧水六百余年，竹筏、水坝与凤尾竹构成不落幕的田园长卷。", "subs": [{"n": "遇龙桥", "lon": 110.394, "lat": 24.812, "yaw": 90, "tip": "明代单孔石拱桥：清晨薄雾竹筏穿桥洞，逆光水雾氛围感最强"}, {"n": "金龙桥码头·水坝", "lon": 110.389, "lat": 24.819, "yaw": 160, "tip": "漂流上段起点：筏工过坝溅水瞬间用1/1000s凝固，坝面镜水映峰丛"}, {"n": "旧县村·古宅田园", "lon": 110.426, "lat": 24.788, "yaw": 180, "tip": "唐代归义县城故地、青砖老宅群：骑行慢门拍田园纵深，村口古樟做前景"}, {"n": "工农桥·日落", "lon": 110.488, "lat": 24.738, "yaw": 250, "tip": "十里画廊南端公路桥：日落方向正对峰丛剪影与连绵竹筏，17:30前占桥位；近旁大榕树、月亮山可串拍"}]}, {"id": 3, "name": "龙脊梯田（龙胜）", "region": "桂林市", "lon": 110.15, "lat": 25.81, "alt": 1000, "cat": "cloud", "themes": ["cloud", "lake", "culture"], "win": "灌水全盛约5月25日–6月10日：镜面梯田映天光+雨后云海；9月下–10月中金穗翻浪；农历六月初六晒衣节满寨红衣；冬季雪覆田埂如等高线（山路结冰谨慎）", "note": "平安寨、金坑大寨、古壮寨分片验票（通票有效期以票面为准）；大寨索道直达金佛顶，日出机位人多；灌水季与晒衣节民宿需提前预订", "tips": ["灌水季日落比日出更稳：水面反夕阳，田埂曲线成光带", "金佛顶看云海翻脊、千层天梯看镜面整片，两个机位分工守", "晒衣节（六月六）红瑶盛装晒红衣：人文大场面一年一度，早到拍晨光晒衣廊"], "story": "始耕于元、成型于明清的龙脊梯田在垂直高差近千米的山脊上刻出六百余年等高线，壮族与红瑶先民依山造田；『龙脊』之名取自山脊田埂如龙鳞盘旋。", "subs": [{"n": "金坑大寨·金佛顶", "lon": 110.15, "lat": 25.816, "yaw": 120, "tip": "索道上站即达：俯瞰金坑全貌，日出云海主机位，长焦截田埂曲线分层"}, {"n": "千层天梯·西山韶乐", "lon": 110.143, "lat": 25.813, "yaw": 280, "tip": "大寨西侧观景点：灌水季镜面最整、日落逆光镀金，等高线构图"}, {"n": "平安寨·九龙五虎", "lon": 110.118, "lat": 25.762, "yaw": 300, "tip": "平安梯田标志机位，『七星伴月』在同线：石板路步行上观景台，黄昏光影最立体"}, {"n": "大寨村·红瑶人家", "lon": 110.152, "lat": 25.809, "yaw": 0, "tip": "吊脚楼木楼与晒禾架：红瑶长发与盛装是独家人文题材，先征得同意"}]}, {"id": 4, "name": "猫儿山（华南之巅）", "region": "桂林市", "lon": 110.418, "lat": 25.87, "alt": 2141, "cat": "cloud", "themes": ["cloud", "bloom", "leaf"], "win": "云海四季、秋冬清晨与春夏雨后最稳；5–6月高山杜鹃沿海拔次第开；10月下–11月中高山彩林；冬季寒潮后雾凇冰雪（山路结冰管制）", "note": "保护区与景区双重管理：山顶仅指定区域可拍，夜间低温备羽绒；冬季冰雪期实行交通管制，出发前查景区公告；盘山公路雾天能见度骤降", "tips": ["山顶观日坪守云海日出：云涛填谷如海，寒潮后清晨最壮观", "老山界纪念碑段拍山径之字弯：云雾缠山时故事感最强", "漓江源大峡谷夏季均温20℃：溪谷慢门+桫椤林，避暑兼出片"], "story": "海拔2141.5米的华南第一峰，漓江、资江皆发源于此，山顶『华南之巅』石碑是桂北屋脊的注脚；1934年红军长征翻越的『老山界』即越城岭主峰段，陆定一名篇让它载入课本。", "subs": [{"n": "华南之巅·观日坪", "lon": 110.413, "lat": 25.866, "yaw": 105, "tip": "2141.5米石碑+云海日出正机位：冬季雾凇包裹松枝，广角收石碑与云海同框"}, {"n": "老山界·红军亭", "lon": 110.43, "lat": 25.813, "yaw": 90, "tip": "长征翻越处纪念碑：晨雾中山路盘旋，红色题材与风光结合的故事构图"}, {"n": "漓江源大峡谷", "lon": 110.47, "lat": 25.858, "yaw": 135, "tip": "漓江正源溪谷：原始森林、叠瀑清潭，慢门拉丝+CPL，夏季避暑"}]}, {"id": 5, "name": "三江程阳八寨（程阳风雨桥）", "region": "柳州市", "lon": 109.644, "lat": 25.905, "g5": true, "cat": "culture", "themes": ["culture", "cloud"], "win": "全年；9–10月糯禾金黄挂晒禾廊，晨雾鼓楼最出片；侗年（农历十一月）与多耶节芦笙踩堂最热闹", "note": "2024年确定为国家5A级旅游景区；门票含八寨通行，百家宴需提前预约；鼓楼火塘与人家内拍摄先征得同意", "tips": ["永济桥晨雾逆光：桥廊层叠剪影+水面倒影，长焦压缩最出形", "鼓楼夜拍：火塘暖光+星空冷调，三脚架长曝", "9月晒禾季禾廊挂满金黄糯穗：人文纪实与色彩构图双题材"], "story": "始建于1912年的程阳永济桥是侗族风雨桥的巅峰之作：墩台上以杉木层层挑梁、不用一钉一铆；侗族木构建筑营造技艺已列入人类非遗，八寨五桥被誉为『侗族建筑博物馆』。", "subs": [{"n": "程阳永济桥", "lon": 109.638, "lat": 25.9, "yaw": 90, "tip": "风雨桥代表作横卧林溪河：清晨薄雾中桥廊纵深+倒影，河滩低机位"}, {"n": "马鞍寨·鼓楼", "lon": 109.641, "lat": 25.907, "yaw": 180, "tip": "侗寨核心：鼓楼飞檐与禾廊晒禾，芦笙踩堂时人群绕鼓旋转，高机位俯拍"}, {"n": "平寨·百家宴长桌", "lon": 109.648, "lat": 25.911, "yaw": 200, "tip": "侗年与节庆时百米长桌沿巷摆开：俯拍长桌纵深与热气，需提前预约入席"}]}, {"id": 6, "name": "黄姚古镇", "region": "贺州市", "lon": 111.201, "lat": 24.251, "g5": true, "cat": "culture", "themes": ["culture"], "win": "全年；3–4月古镇外油菜花田配喀斯特峰林，清晨6:30前石板街无人，19:30后灯笼亮起为黄金时段", "note": "2022年确定为国家5A级旅游景区；古镇内小景点联票制，夜景三脚架位需早占；无人机注意古镇限飞与居民", "tips": ["带龙桥晨雾倒影是名片：清晨无风水面如镜，古桥连峰丛", "石板街清晨空巷拍透视线，夜晚红灯笼低角度广角", "姚江竹筏平视古镇外峰林：日落金水，慢门拉筏"], "story": "发祥于宋、鼎盛于清乾隆年间的『梦境家园』：喀斯特峰林环抱的盆地里，300余栋明清青砖大宅依九宫八卦布局，因黄、姚两姓合居得名，岭南商埠文脉与山水共生六百年。", "subs": [{"n": "带龙桥", "lon": 111.202, "lat": 24.249, "yaw": 90, "tip": "古镇标志石拱桥跨姚江：晨雾+倒影+浣衣人，广角低机位收桥洞"}, {"n": "石板街·安乐寺", "lon": 111.199, "lat": 24.251, "yaw": 180, "tip": "青石板巷透视线与门楣题字：清晨无人时段拍空巷，雨天石板反光最润"}, {"n": "姚江·竹筏田园", "lon": 111.201, "lat": 24.225, "yaw": 270, "tip": "古镇下游姚江段：竹筏穿行稻田峰林，日落逆光金江慢门"}]}, {"id": 7, "name": "姑婆山", "region": "贺州市", "lon": 111.552, "lat": 24.634, "alt": 1844, "cat": "fall", "themes": ["fall", "leaf", "cloud"], "win": "4–9月瀑布丰水；夏季均温约22℃避暑；10月下–12月上彩林峰值；冬季偶有冰挂雾凇", "note": "国家森林公园多景点分散（仙姑瀑布、天堂顶等），天堂顶徒步往返需大半天并登记；《茶是故乡浓》取景地方家茶园在园内", "tips": ["仙姑瀑布慢门拉丝+CPL：谷内湿度大镜头布常备", "天堂顶看云海翻涌需徒步登顶：晨拍宜宿山下农家早出发", "方家茶园茶垄线条：采茶人点缀其间，晨雾时段最柔"], "story": "最高峰天堂顶海拔1844米为桂东之巅，相传何仙姑在此得道、客家先民奉为『客家圣山』，仙姑庙自唐代香火不绝；16处瀑布与25座千米山峰藏在这座天然的动植物王国。", "subs": [{"n": "仙姑瀑布", "lon": 111.539, "lat": 24.618, "yaw": 0, "tip": "森林栈道尽头主瀑：丰水期气势与绿意兼得，慢门约1/4s拉丝"}, {"n": "方家茶园", "lon": 111.545, "lat": 24.625, "yaw": 160, "tip": "《茶是故乡浓》取景地：茶垄曲线+采茶人，长焦截局部"}, {"n": "天堂顶", "lon": 111.589, "lat": 24.7, "yaw": 180, "tip": "1844米桂东之巅：云海日出与秋冬彩林，徒步登顶量力而行"}]}, {"id": 8, "name": "巴马盘阳河（世界长寿之乡）", "region": "河池市", "lon": 107.1, "lat": 24.3, "cat": "culture", "themes": ["culture", "lake"], "win": "全年；11–3月『候鸟人』聚居最有生活气；百鸟岩光柱以正午前后最佳；赐福湖晨雾秋冬最稳", "note": "百魔洞、百鸟岩等溶洞分别售票；盘阳河沿岸村屯食宿朴素，深入赐福湖岛村建议自驾；拍摄长寿老人务必先经家属同意", "tips": ["命河观景台俯拍『命』字河曲：长焦截字，晨雾未散时最有仙气", "百鸟岩乘船穿三洞明暗交替如『三天三夜』：正午前后光柱入洞最魔幻", "百魔洞口晨练候鸟人队列：人文纪实好题材，征得同意再拍"], "story": "1991年国际自然医学会年会宣布巴马为世界第五个长寿之乡，盘阳河谷由此成为长寿地理的样本：河水穿洞而过、田垌间河道天然写出『命』字，长寿人文与喀斯特山水互为注脚。", "subs": [{"n": "百魔洞", "lon": 107.098, "lat": 24.303, "yaw": 0, "tip": "巨型溶洞石笋大殿与磁疗洞口晨练人群：洞内弱光备高感大光圈"}, {"n": "百鸟岩", "lon": 107.103, "lat": 24.292, "yaw": 90, "tip": "地下河穿洞三起三伏：正午前后天窗光柱入洞，船行慢门留意晃动"}, {"n": "命河观景台", "lon": 107.028, "lat": 24.268, "yaw": 200, "tip": "那社乡田垌河道天然弯出『命』字：高台俯拍，晨雾中等光线分层"}, {"n": "赐福湖·赐福河", "lon": 107.104, "lat": 24.273, "yaw": 90, "tip": "湖湾岛屿星布：晨雾渔舟与倒影，秋冬日出方向机位最佳"}]}, {"id": 9, "name": "七百弄国家地质公园", "region": "河池市", "lon": 107.662, "lat": 24.08, "alt": 800, "cat": "cloud", "themes": ["cloud", "culture"], "win": "全年；雨后初晴云海填弄最稳；4–6月云雨多变出大片，9–11月通透度最高", "note": "地质公园范围大、观景台分散，自驾山路弯多；弄顶村屯取水补给不便，深入需备干粮；布努瑶村寨拍摄先打招呼", "tips": ["千山万弄观景台雨后守云海：云涛填满千弄如白色梯田，长焦分层", "八里九弯公路俯拍连续回头弯：航拍或长焦压缩均可", "弄顶瑶寨玉米挂晒与石头房：人文纪实题材厚重，傍晚炊烟"], "story": "251平方公里的峰丛之间散布1400余个洼地『弄』，最深达数百米，是世界上深洼地密度最高的喀斯特区域之一；布努瑶世代在弄顶耕作，被专家称为喀斯特峰丛洼地的天然博物馆。", "subs": [{"n": "千山万弄观景台", "lon": 107.662, "lat": 24.08, "yaw": 90, "tip": "公园主观景台：雨后初晴云海填弄第一机位，日出方向云染金边"}, {"n": "八里九弯观景台", "lon": 107.648, "lat": 24.073, "yaw": 270, "tip": "进山公路连续回头弯：俯拍公路之字与峰丛，晨雾缠山最出形"}, {"n": "七百弄乡·弄顶人家", "lon": 107.688, "lat": 24.126, "yaw": 180, "tip": "布努瑶石山弄场：玉米挂晒、石头房与人畜小道，纪实扫街感十足"}]}, {"id": 10, "name": "靖西鹅泉（含旧州绣球村）", "region": "百色市", "lon": 106.385, "lat": 23.102, "cat": "lake", "themes": ["lake", "culture"], "win": "全年；泉水四季不涸、夏季雨后水色最翠；『灵泉晚照』在晴日黄昏，晨雾古桥倒影次之", "note": "国家4A级景区；距靖西城区约4.5公里，旧州绣球村约9公里可串拍；竹筏与泉边步道注意防滑", "tips": ["十五孔古桥晨雾倒影：长焦压缩桥身与峰丛，渔筏入画等一等", "泉眼平台俯拍水底：正午顶光穿透水清见底，CPL消反光", "旧州绣球街家家门前制绣球：手部特写与门楣色彩，人文必拍"], "story": "与大理蝴蝶泉、桂平西山乳泉并称西南三大名泉，也是亚洲第一跨国瀑布德天瀑布的源头；泉水自小鹅山麓涌出七百余年不涸，『灵泉晚照』『鹅泉跃鲤』自明代起即为靖西八景。", "subs": [{"n": "鹅泉·十五孔古桥", "lon": 106.388, "lat": 23.101, "yaw": 90, "tip": "古石桥连峰丛：晨雾渔筏+倒影是鹅泉名片机位，黄昏残照亦佳"}, {"n": "鹅泉泉眼·跃鲤", "lon": 106.385, "lat": 23.102, "yaw": 0, "tip": "名泉出水处水清见底、游鱼可数：CPL拍水底纹理与跃鲤瞬间"}, {"n": "旧州·绣球街", "lon": 106.415, "lat": 23.06, "yaw": 180, "tip": "中国绣球之乡：老街门前制绣球的手艺特写，文昌阁古建收尾"}]}, {"id": 11, "name": "通灵大峡谷", "region": "百色市", "lon": 106.648, "lat": 23.026, "cat": "fall", "themes": ["fall", "leaf"], "win": "6–9月丰水期瀑布最壮；谷内四季常绿、夏季凉爽；桫椤与藤蔓雨后油绿最出质感", "note": "距德天瀑布约一小时车程，常与德天、明仕串联；谷底步道湿滑，往返约3.8公里，带足饮用水；水雾区注意器材防护", "tips": ["瀑布谷底仰拍：广角收188米水幕全高，水雾大备镜头布与防雨罩", "栈道中段回望：瀑布+桫椤+藤蔓的同框纵深构图", "丰水期下午逆光常见彩虹：机位在瀑布东侧栈道拐角"], "story": "地下河塌陷造就的狭长峡谷深300米、全长2800米，188米的通灵大瀑布单级跌落天坑口，与恐龙时代的桫椤、古崖洞葬同藏一谷，被称为绿色封锁的地质秘境。", "subs": [{"n": "通灵大瀑布·观景栈道", "lon": 106.649, "lat": 23.023, "yaw": 0, "tip": "188米单级瀑布跌入天坑：谷底仰拍竖幅，水雾扑面高速连拍"}, {"n": "桫椤谷·古悬葬", "lon": 106.648, "lat": 23.028, "yaw": 90, "tip": "孑遗植物桫椤林与崖壁洞葬：侧逆光勾叶缘，长焦截崖葬遗迹"}]}, {"id": 12, "name": "大新德天跨国瀑布", "region": "崇左市", "lon": 106.723, "lat": 22.856, "g5": true, "cat": "fall", "themes": ["fall"], "win": "丰水期6–10月：6–7月水量最大，9–10月水稳人少且边关稻田金黄（综合最佳）；枯水期12–5月秀美如纱；雨后1–2天最磅礴", "note": "2018年确定为国家5A级旅游景区；实名预约购票（官方小程序），竹筏近观另付费；观瀑台分多级，最高平台节假日人流大", "tips": ["三级观瀑台拍全景：上午顺光，长焦把越南板约瀑布同框收进画面交代『跨国』", "竹筏近观水幕：高速快门+防水套，正午常挂彩虹", "53号界碑边民互市：边关人文补一张，与瀑布风光成组照"], "story": "归春河至此跌落70余米、三级叠瀑横宽200余米，与越南板约瀑布连成横跨中越的亚洲第一跨国瀑布；年均径流量约为黄果树的三倍，界河与瀑布共生出独一份的边关气象。", "subs": [{"n": "三级观瀑台", "lon": 106.724, "lat": 22.857, "yaw": 200, "tip": "主机位：三级跌落全景+对岸板约瀑布同框，上午顺光水雾彩虹"}, {"n": "53号界碑·边关集市", "lon": 106.712, "lat": 22.862, "yaw": 260, "tip": "清代界碑与边民互市小集：界碑特写+赶集人文，广角收边关氛围"}, {"n": "竹筏码头·近观水幕", "lon": 106.722, "lat": 22.854, "yaw": 350, "tip": "乘筏抵瀑下水雾扑面：1/1000s凝固水珠，注意器材防潮"}]}, {"id": 13, "name": "大新明仕田园", "region": "崇左市", "lon": 106.925, "lat": 22.706, "cat": "lake", "themes": ["lake", "culture"], "win": "全年；9–10月稻浪金黄最饱满，晨雾竹筏与凤尾竹倒影最佳；雨后水汽升腾层次多", "note": "国家4A级景区；竹筏游约40分钟循环发班，田园观景台免票段在明仕桥一带；距德天瀑布车程约1小时，适合联动一日", "tips": ["明仕桥一带低机位拍倒影：凤尾竹+竹筏+峰丛三层构图", "9–10月金黄稻田做前景：长焦压缩峰丛与田埂线条", "晨雾趁早：6:30前竹筏未开、水面如镜"], "story": "明仕河在喀斯特峰丛间蜿蜒出一块田园盆地，壮乡村落依水而居，电视剧《花千骨》的『长留仙境』取景于此，『山水画廊里种田』是对它最直白的描述。", "subs": [{"n": "明仕村·竹筏码头", "lon": 106.914, "lat": 22.71, "yaw": 180, "tip": "竹筏穿行峰丛稻田：平视视角拍筏工撑篙与倒影"}, {"n": "明仕桥·日落机位", "lon": 106.925, "lat": 22.703, "yaw": 260, "tip": "田园标志观景段：日落金稻+孤峰剪影，晨雾时反拍亦佳"}, {"n": "明仕河·田园段", "lon": 106.951, "lat": 22.715, "yaw": 90, "tip": "下游河道平缓开阔：晨雾渔筏与水牛同框，长焦等瞬间"}]}, {"id": 14, "name": "北海涠洲岛", "region": "北海市", "lon": 109.1, "lat": 21.03, "alt": 79, "g5": true, "cat": "lake", "themes": ["lake", "cloud", "culture"], "win": "4–11月海岛季：海况稳、能见度高（7–9月台风需绕行）；12月–次年4月为布氏鲸观鲸季（约70头近岸群体，清晨傍晚最活跃）", "note": "南湾鳄鱼山景区2020年确定为国家5A级旅游景区；船票+上岛票实名预订（旺季抢票），岛上以电动车出行为主；五彩滩日出需查潮汐并摸黑赶路；观鲸选合规船只并保持约100米距离", "tips": ["五彩滩日出配退潮：火山岩海蚀平台纹理+积水面映朝霞，提前查潮汐表", "鳄鱼山下午顺光拍层状火山岩与海蚀拱桥，滴水丹屏留给日落", "观鲸季清晨出海：海鸥盘旋处即鲸群捕食点，长焦400mm以上、快门1/1000s"], "story": "中国最大最年轻的火山岛：数万年前的喷发在南海上塑造出破火山口海湾与环岛熔岩海岸，清代咸丰年间建成的盛塘天主堂以珊瑚石砌筑，火山与信仰在同一座岛上沉淀。", "subs": [{"n": "五彩滩", "lon": 109.125, "lat": 21.021, "yaw": 90, "tip": "东岸火山海蚀平台日出机位：退潮时纹理+潮池映天，广角低机位"}, {"n": "鳄鱼山·火山口公园", "lon": 109.098, "lat": 21.011, "yaw": 180, "tip": "环岛火山地质精华：层状熔岩、海蚀拱桥与灯塔，下午顺光质感最强"}, {"n": "滴水丹屏", "lon": 109.09, "lat": 21.014, "yaw": 260, "tip": "西岸赤壁滴水不绝：日落方向机位，黄昏岩壁镀金+慢门海浪"}, {"n": "盛塘天主堂", "lon": 109.133, "lat": 21.053, "yaw": 200, "tip": "清代珊瑚石哥特教堂：斑驳石墙细节与村落人文，清晨侧光最立体"}]}, {"id": 15, "name": "北海银滩", "region": "北海市", "lon": 109.143, "lat": 21.408, "cat": "lake", "themes": ["lake"], "win": "4–11月下海季；日出机位在东向银滩公园，日落转西向侨港与冠头岭；开海节（约8月16日）千帆出港", "note": "国家4A级景区、2023年成功创建国家级旅游度假区并获评『美丽海湾』；沙滩东西绵延约24公里，免票开放段多，旺季注意游泳安全线", "tips": ["石英砂低角度逆光拍『银光』：清晨或傍晚侧逆光最明显", "侨港海滩拍归帆日落：渔船剪影+疍家渔市烟火气", "冠头岭是北海唯一海岬：礁石慢门海景+灯塔日落，与银滩一日串联"], "story": "1992年即被列为全国首批国家级旅游度假区的『天下第一滩』：绵延约24公里的海滩由高品位石英砂铺就，阳光下泛出银光，『滩长平、沙细白、水温净、浪柔软』一语道尽。", "subs": [{"n": "银滩公园·潮雕广场", "lon": 109.141, "lat": 21.407, "yaw": 120, "tip": "珍珠贝雕塑『潮』为地标：清晨东向日出+潮汐纹理，低机位收沙滩纵深"}, {"n": "侨港海滩·暮归", "lon": 109.109, "lat": 21.421, "yaw": 270, "tip": "疍家渔港日落：归帆剪影+渔市灯火，开海节前后场面最大"}, {"n": "冠头岭·海角灯塔", "lon": 109.051, "lat": 21.454, "yaw": 260, "tip": "海岬礁石+灯塔日落：慢门拍浪花拉丝，注意涨潮安全线"}]}, {"id": 16, "name": "东兴·京族三岛（万尾金滩）", "region": "防城港市", "lon": 108.158, "lat": 21.527, "cat": "culture", "themes": ["culture", "lake"], "win": "全年；4–11月滨海季下海赶海；哈节（万尾农历六月初九–初十）最盛；清晨退潮拍高跷捕鱼与拉网", "note": "京族三岛（万尾、巫头、山心）已连岛成半岛，金滩免费开放；哈亭祭祀庄重勿凑近打断；边境管理区随身带证件", "tips": ["清晨退潮拍高跷捕鱼：长焦等渔民踩跷疾走瞬间，逆光剪影最带感", "哈节哈亭唱哈：独弦琴与哈妹歌舞，征得同意后大光圈拍特写", "大清国一号界碑+北仑河口红树林：边关史迹与湿地生态成组照"], "story": "中国唯一的海洋民族京族世代聚居于万尾、巫头、山心三岛，哈节与独弦琴艺术同为国家级非遗；高跷捕鱼、拉网收渔是中越边境线上独一份的海洋人文。", "subs": [{"n": "万尾金滩", "lon": 108.154, "lat": 21.524, "yaw": 160, "tip": "京族渔作主场：清晨高跷捕鱼与拉网作业，长焦抓拍劳作剪影"}, {"n": "万尾哈亭", "lon": 108.162, "lat": 21.533, "yaw": 0, "tip": "哈节祭海唱哈的主场：节庆时旗幡与人群绕亭，广角收全景+特写双机"}, {"n": "北仑河口·大清国界碑", "lon": 108.051, "lat": 21.545, "yaw": 0, "tip": "清代『大清国钦州界』碑与河口红树林：边关人文+湿地滩涂慢门"}]}];
+var LODGING = [{"n": "龙脊金坑·红瑶吊脚楼", "lon": 110.152, "lat": 25.809, "type": "梯田吊脚楼", "tip": "吊脚楼本身就是前景：木楼火塘、晒禾架与梯田同框；宿大寨村步行即达金佛顶索道站，免去摸黑山路，灌水季与晒衣节（六月六）需提前数周预订"}, {"n": "涠洲岛·珊瑚石屋民宿", "lon": 109.132, "lat": 21.052, "type": "火山岛珊瑚石屋", "tip": "百年珊瑚石墙老宅自带斑驳质感，院里芭蕉就是现成前景；选近东岸的村子住，五彩滩日出摸黑出发只需十分钟；台风季留意船期停航"}];
+var LOCAL = [{"n": "壮族三月三歌圩（国家级非遗）", "type": "民族节庆", "region": "南宁市武鸣区（全区各地同庆）", "month": "农历三月初三 ≈ 4月前后（全区放假2天）", "tip": "歌圩对唱、抛绣球、竹竿舞与千人壮锦盛装：武鸣主会场场面最大，长焦抓抛绣球腾空瞬间，人群色块用高机位俯拍", "lon": 108.271, "lat": 23.161}, {"n": "龙脊红瑶晒衣节", "type": "民族节庆", "region": "桂林市龙胜县金坑大寨", "month": "农历六月初六 ≈ 7月上中旬", "tip": "红瑶妇女把红衣红裙晒满木楼栏杆，一年中最浓的一抹红：晨光斜射晒衣廊逆光透布，盛装劳作场景先征得同意再拍", "lon": 110.152, "lat": 25.809}, {"n": "京族哈节（国家级非遗）", "type": "民族节庆", "region": "防城港东兴市京族三岛", "month": "万尾农历六月初九–初十（山心八月初十）", "tip": "中国唯一海洋民族的祭海大典：哈亭唱哈、独弦琴余音与高跷捕鱼同场，独弦琴特写用大光圈，祭海仪式庄重勿凑近打断", "lon": 108.162, "lat": 21.533}, {"n": "壮族霜降节（人类非遗『二十四节气』扩展项目）", "type": "民族节庆", "region": "崇左市天等县向都镇、大新县下雷镇", "month": "霜降日 ≈ 10月23日前后", "tip": "壮乡以『节庆丰收』过节气：做糍粑、演壮剧、赛民歌，边关稻田金黄与节庆人潮同期，纪实与风光可一日双收", "lon": 106.957, "lat": 23.232}, {"n": "三江侗年·百家宴", "type": "民族节庆", "region": "柳州市三江县程阳八寨", "month": "农历十一月初一前后 ≈ 12月", "tip": "芦笙踩堂、拦路歌与合拢百家宴：百米长桌沿鼓楼摆开，高机位俯拍长桌纵深，火塘边弱光备高感与大光圈", "lon": 109.644, "lat": 25.905}, {"n": "北海开海节", "type": "渔家民俗", "region": "北海市银海区侨港镇", "month": "南海伏季休渔结束 ≈ 8月16日", "tip": "千帆竞发出港：追焦连拍渔船破浪，金光下桅杆林立；靠岸后的渔市与疍家买卖是烟火气十足的扫街场", "lon": 109.121, "lat": 21.428}];
+var REGION_ORDER = ["桂林市", "柳州市", "贺州市", "河池市", "百色市", "崇左市", "北海市", "防城港市"];
+
+var map = L.map('map', { zoomControl:true, minZoom:7, maxZoom:18 }).setView([24.0, 109.0], 7);
+var sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  { maxZoom:18, attribution:'影像 © Esri, Maxar, Earthstar Geographics' }).addTo(map);
+var topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+  { maxZoom:17, subdomains:'abc', attribution:'© OpenStreetMap 贡献者, SRTM | © OpenTopoMap (CC-BY-SA)' });
+var osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  { maxZoom:19, attribution:'© OpenStreetMap 贡献者' });
+L.control.layers({'卫星影像':sat,'等高线地形':topo,'OSM 街道':osm}, null, {position:'topright'}).addTo(map);
+L.control.scale({imperial:false, position:'bottomleft'}).addTo(map);
+
+function coordTxt(lat, lon){ return lat.toFixed(4) + ', ' + lon.toFixed(4); }
+function amapLink(s){ return 'https://uri.amap.com/search?keyword=' + encodeURIComponent(s.name.replace(/（.*?）/g,'')); }
+function copyBtn(t){ return '<button data-cp="' + t + '">复制坐标</button>'; }
+function bearingDeg(la1, lo1, la2, lo2){
+  var y = Math.sin((lo2-lo1)*Math.PI/180) * Math.cos(la2*Math.PI/180);
+  var x = Math.cos(la1*Math.PI/180)*Math.sin(la2*Math.PI/180) - Math.sin(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.cos((lo2-lo1)*Math.PI/180);
+  return Math.atan2(y,x)*180/Math.PI;
+}
+function subDefaultYaw(s, u){
+  var i = s.subs.indexOf(u), t = s.subs[i+1] || s.subs[i-1];
+  return t ? (bearingDeg(u.lat, u.lon, t.lat, t.lon) + 360) % 360 : 0;
+}
+function allTargets(){
+  var a = [];
+  SPOTS.forEach(function(s){
+    a.push({name:s.name, lat:s.lat, lon:s.lon});
+    s.subs.forEach(function(u){ a.push({name:u.n, lat:u.lat, lon:u.lon}); });
+  });
+  return a;
+}
+function parkPopup(s){
+  var h = '<div class="pp-name">' + s.name + (s.g5 ? '<span class="badge b5a">5A</span>' : '') + (s.np ? '<span class="badge bnp">国家公园</span>' : '') + '</div>'
+    + '<div class="pp-region">' + s.region + (s.alt ? ' · ' + s.alt : '') + '</div>'
+    + (s.story ? '<div class="pp-story">' + s.story + '</div>' : '')
+    + (s.poems && s.poems.length ? '<div class="pp-poems">' + s.poems.map(function(p){ return '<div class="pp-poem"><div class="pl">『' + p.l + '』</div><div class="pm">—— ' + p.a + '《' + p.t + '》· ' + p.d + '</div></div>'; }).join('') + '</div>' : '')
+    + (s.note ? '<div class="pp-note">' + s.note + '</div>' : '')
+    + '<div class="pp-row"><b class="k">最佳窗口</b>　' + s.win + '</div>'
+    + '<div class="pp-row"><b class="k">题材</b>　' + s.themes.map(function(t){return CAT[t].label;}).join(' / ') + '</div>'
+    + '<div class="pp-coord"><span>' + coordTxt(s.lat, s.lon) + '</span>' + copyBtn(coordTxt(s.lat, s.lon)) + '</div>'
+    + (s.tips ? '<ul class="pp-tips">' + s.tips.map(function(t){ return '<li>' + t + '</li>'; }).join('') + '</ul>' : '')
+    + '<div class="pp-row"><b class="k">小景点（' + s.subs.length + '）</b></div>'
+    + '<ul class="pp-subs">' + s.subs.map(function(u){ return '<li>' + u.n + '</li>'; }).join('') + '</ul>'
+    + '<div class="pp-links"><a href="' + amapLink(s) + '" target="_blank" rel="noopener">高德地图导航 →</a><a href="https://cn.bing.com/maps?q=' + coordTxt(s.lat, s.lon) + '" target="_blank" rel="noopener">Bing 卫星对照 →</a></div>';
+  return h;
+}
+function subPopup(s, u){
+  var yaw = u.yaw != null ? u.yaw : subDefaultYaw(s, u);
+  return '<div class="pp-name" style="font-size:14px">' + u.n + '</div>'
+    + '<div class="pp-region">' + s.name + ' · 小景点/机位</div>'
+    + '<div class="pp-coord"><span>' + coordTxt(u.lat, u.lon) + '</span>' + copyBtn(coordTxt(u.lat, u.lon)) + '</div>'
+    + '<div class="pp-row"><b class="k">机位要点</b>　' + u.tip + '</div>'
+    + '<div style="margin:7px 0 4px"><button class="p3dopen" data-lat="' + u.lat + '" data-lon="' + u.lon + '" data-name="' + u.n + '" data-yaw="' + yaw.toFixed(0) + '">👁 人视模拟 · 环顾山形</button></div>'
+    + '<div class="pp-links"><a href="https://cn.bing.com/maps?q=' + coordTxt(u.lat, u.lon) + '" target="_blank" rel="noopener">Bing 卫星对照 →</a></div>';
+}
+function stayPopup(u){
+  return '<div class="pp-name" style="font-size:14px;color:#862e9c">🛖 ' + u.n + '</div>'
+    + '<div class="pp-region">异形住宿 · ' + u.type + '</div>'
+    + '<div class="pp-coord"><span>' + coordTxt(u.lat, u.lon) + '</span>' + copyBtn(coordTxt(u.lat, u.lon)) + '</div>'
+    + '<div class="pp-row"><b class="k">要点</b>　' + u.tip + '</div>'
+    + '<div class="pp-links"><a href="https://cn.bing.com/maps?q=' + coordTxt(u.lat, u.lon) + '" target="_blank" rel="noopener">Bing 卫星对照 →</a></div>';
+}
+function localPopup(u){
+  return '<div class="pp-name" style="font-size:14px;color:#8a5a00">✦ ' + u.n + '</div>'
+    + '<div class="pp-region">地方特色 · ' + u.type + (u.month ? ' · ' + u.month : '') + '</div>'
+    + (u.region ? '<div class="pp-region">' + u.region + '</div>' : '')
+    + (u.lon != null ? '<div class="pp-coord"><span>' + coordTxt(u.lat, u.lon) + '</span>' + copyBtn(coordTxt(u.lat, u.lon)) + '</div>' : '')
+    + '<div class="pp-row" style="line-height:1.55">' + u.tip + '</div>';
+}
+var markers = {}, subLayers = {}, stayLayer = L.layerGroup(), localLayer = L.layerGroup();
+var tipSubs = [];   /* 自动标注：公园名 z≥8，机位名 z≥12 */
+SPOTS.forEach(function(s){
+  var c = CAT[s.cat].color;
+  var icon = L.divIcon({ className:'', iconSize:[24,24], iconAnchor:[12,12], popupAnchor:[0,-12],
+    html:'<div style="width:24px;height:24px;border-radius:50%;background:'+c+';color:#fff;font:700 12px/24px PingFang SC,Microsoft YaHei,sans-serif;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.45),0 0 0 2.5px #fff">' + s.id + '</div>' });
+  markers[s.id] = L.marker([s.lat, s.lon], {icon:icon, title:s.name}).addTo(map)
+    .bindPopup(parkPopup(s), {maxWidth:295})
+    .bindTooltip(s.name, {direction:'right', className:'slabel', offset:[8,-6]});
+  tipSubs.push(markers[s.id]);
+  var g = L.layerGroup();
+  var line = s.subs.map(function(u){ return [u.lat, u.lon]; });
+  L.polyline(line, {color:c, weight:2.5, opacity:.8, dashArray:'6 7'})
+    .bindTooltip(s.name + ' 游览/拍摄线').addTo(g);
+  s.subs.forEach(function(u){
+    var di = L.divIcon({ className:'', iconSize:[15,15], iconAnchor:[7.5,7.5], popupAnchor:[0,-8],
+      html:'<div style="width:15px;height:15px;border-radius:50%;background:'+c+';opacity:.92;box-shadow:0 0 0 2px #fff,0 1px 3px rgba(0,0,0,.4)"></div>' });
+    var _m = L.marker([u.lat, u.lon], {icon:di, title:u.n}).addTo(g)
+      .bindPopup(subPopup(s, u), {maxWidth:280})
+      .bindTooltip(u.n, {direction:'right', className:'slabel', offset:[7,-5]});
+    tipSubs.push(_m);
+  });
+  subLayers[s.id] = g;
+});
+LODGING.forEach(function(u){
+  var di = L.divIcon({ className:'', iconSize:[18,18], iconAnchor:[9,9], popupAnchor:[0,-9],
+    html:'<div style="width:18px;height:18px;transform:rotate(45deg);background:#9c36b5;opacity:.94;box-shadow:0 0 0 2px #fff,0 1px 3px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(-45deg);color:#fff;font:700 11px/1 sans-serif">🛖</span></div>' });
+  L.marker([u.lat, u.lon], {icon:di, title:u.n}).bindPopup(stayPopup(u), {maxWidth:280}).addTo(stayLayer);
+});
+if (LODGING.length) stayLayer.addTo(map);
+LOCAL.forEach(function(u){
+  if (u.lon == null) return;
+  var di = L.divIcon({ className:'', iconSize:[18,18], iconAnchor:[9,9], popupAnchor:[0,-9],
+    html:'<div style="width:18px;height:18px;border-radius:50%;background:#f5e6c8;border:2px solid #8a5a00;box-shadow:0 1px 3px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;color:#8a5a00;font:700 11px/1 sans-serif">✦</div>' });
+  L.marker([u.lat, u.lon], {icon:di, title:u.n}).bindPopup(localPopup(u), {maxWidth:280}).addTo(localLayer);
+});
+if (LOCAL.some(function(u){ return u.lon != null; })) localLayer.addTo(map);
+
+var gb = L.latLngBounds(SPOTS.concat(LODGING).map(function(s){ return [s.lat, s.lon]; }));
+function fitAll(){ map.invalidateSize(); map.setView(gb.getCenter(), map.getBoundsZoom(gb, true, L.point(46,46)), {animate:false}); }
+fitAll();
+window.addEventListener('load', function(){ setTimeout(fitAll, 80); });
+setTimeout(fitAll, 600);
+
+function syncSubLayers(){
+  var show = map.getZoom() >= 11;
+  SPOTS.forEach(function(s){
+    var g = subLayers[s.id];
+    var pass = curFilter === 'all' || s.themes.indexOf(curFilter) >= 0;
+    var want = show && pass;
+    if (want) { if (!map.hasLayer(g)) g.addTo(map); }
+    else if (map.hasLayer(g)) map.removeLayer(g);
+  });
+}
+map.on('zoomend', syncSubLayers);
+function syncTips(){
+  var z = map.getZoom();
+  tipSubs.forEach(function(m){
+    var isSub = m.getIcon && m.getIcon().options.iconSize && m.getIcon().options.iconSize[0] <= 15;
+    var want = z >= (isSub ? 12 : 8);
+    if (want && map.hasLayer(m)) m.openTooltip(); else m.closeTooltip();
+  });
+}
+map.on('zoomend', syncTips);
+
+var curFilter = 'all';
+var chipsEl = document.getElementById('chips');
+var listEl = document.getElementById('list');
+function buildChips(){
+  chipsEl.innerHTML = '';
+  var all = [['all','全部']].concat(Object.keys(CAT).map(function(k){ return [k, CAT[k].label]; }));
+  all.forEach(function(p){
+    var d = document.createElement('span');
+    d.className = 'chip' + (curFilter === p[0] ? ' on' : '');
+    d.textContent = p[1];
+    if (curFilter === p[0] && p[0] !== 'all') d.style.background = CAT[p[0]].color;
+    else if (curFilter === p[0]) d.style.background = 'var(--ink)';
+    d.onclick = function(){ curFilter = p[0]; render(); };
+    chipsEl.appendChild(d);
+  });
+}
+function regionKey(s){
+  for (var i = 0; i < REGION_ORDER.length; i++) if (s.region.indexOf(REGION_ORDER[i]) >= 0) return REGION_ORDER[i];
+  return '其他';
+}
+function buildList(){
+  listEl.innerHTML = '';
+  var groups = {};
+  SPOTS.forEach(function(s){
+    if (curFilter !== 'all' && s.themes.indexOf(curFilter) < 0) return;
+    var k = regionKey(s);
+    (groups[k] = groups[k] || []).push(s);
+  });
+  REGION_ORDER.concat(['其他']).forEach(function(rg){
+    if (!groups[rg] || !groups[rg].length) return;
+    var g = document.createElement('div'); g.className = 'grp'; g.textContent = rg;
+    listEl.appendChild(g);
+    groups[rg].forEach(function(s){
+      var d = document.createElement('div'); d.className = 'item'; d.dataset.pid = s.id;
+      var row = document.createElement('div'); row.className = 'row';
+      row.innerHTML = '<div class="num" style="background:' + CAT[s.cat].color + '">' + s.id + '</div>'
+        + '<div><div class="nm">' + s.name + (s.g5 ? '<span class="badge b5a">5A</span>' : '') + (s.np ? '<span class="badge bnp">国家公园</span>' : '') + '</div>'
+        + '<div class="meta">' + s.win + '</div></div>'
+        + '<div class="arrow">▶</div>';
+      d.appendChild(row);
+      var subs = document.createElement('div'); subs.className = 'subs'; subs.style.setProperty('--sc', CAT[s.cat].color);
+      s.subs.forEach(function(u){
+        var r = document.createElement('div'); r.className = 'subrow';
+        var yw = u.yaw != null ? u.yaw : subDefaultYaw(s, u);
+        r.innerHTML = '<div class="sn">' + u.n
+          + '<button class="p3dopen" title="人视模拟" data-lat="' + u.lat + '" data-lon="' + u.lon + '" data-name="' + u.n + '" data-yaw="' + yw.toFixed(0) + '">👁 人视</button></div>'
+          + '<div class="st">' + u.tip + '</div>';
+        r.onclick = function(ev){
+          if (ev.target.closest && ev.target.closest('.p3dopen')) return;
+          ev.stopPropagation();
+          map.flyTo([u.lat, u.lon], Math.max(map.getZoom(), 13), {duration:.8});
+          subLayers[s.id].addTo(map);
+          setTimeout(function(){
+            subLayers[s.id].eachLayer(function(ly){
+              if (ly.getLatLng && Math.abs(ly.getLatLng().lat - u.lat) < 1e-6) ly.openPopup();
+            });
+          }, 850);
+        };
+        subs.appendChild(r);
+      });
+      d.appendChild(subs);
+      row.onclick = function(){
+        var open = d.classList.toggle('open');
+        if (open) { map.flyTo([s.lat, s.lon], Math.max(map.getZoom(), 11), {duration:.8}); syncSubLayers(); }
+      };
+      listEl.appendChild(d);
+    });
+  });
+  if (LODGING.length) {
+    var sg = document.createElement('div'); sg.className = 'grp'; sg.textContent = '🛖 异形住宿';
+    listEl.appendChild(sg);
+    LODGING.forEach(function(u){
+      var r = document.createElement('div'); r.className = 'stayrow';
+      r.innerHTML = '<div class="sn">🛖 ' + u.n + '</div><div class="st">' + u.type + ' · ' + u.tip + '</div>';
+      r.onclick = function(){
+        map.flyTo([u.lat, u.lon], 13, {duration:.8});
+        stayLayer.eachLayer(function(ly){
+          if (ly.getLatLng && Math.abs(ly.getLatLng().lat - u.lat) < 1e-6) ly.openPopup();
+        });
+      };
+      listEl.appendChild(r);
+    });
+  }
+  if (LOCAL.length) {
+    var lg = document.createElement('div'); lg.className = 'grp'; lg.textContent = '✦ 地方特色 · 节庆风物';
+    listEl.appendChild(lg);
+    LOCAL.forEach(function(u){
+      var r = document.createElement('div'); r.className = 'stayrow';
+      r.style.borderLeftColor = '#8a5a00'; r.style.background = '#faf6ec';
+      r.innerHTML = '<div class="sn" style="color:#8a5a00">✦ ' + u.n + (u.month ? ' <span style="font-weight:400;color:#a08a5a">(' + u.month + ')</span>' : '') + '</div>'
+        + '<div class="st">' + u.type + (u.region ? ' · ' + u.region : '') + ' · ' + u.tip + '</div>';
+      r.onclick = function(){
+        if (u.lon == null) return;
+        map.flyTo([u.lat, u.lon], 11, {duration:.8});
+        localLayer.eachLayer(function(ly){
+          if (ly.getLatLng && Math.abs(ly.getLatLng().lat - u.lat) < 1e-6) ly.openPopup();
+        });
+      };
+      listEl.appendChild(r);
+    });
+  }
+  if (!listEl.children.length) listEl.innerHTML = '<div style="font-size:12px;color:var(--sub);padding:20px 4px">该题材暂无点位</div>';
+}
+function syncMarkers(){
+  SPOTS.forEach(function(s){
+    var show = curFilter === 'all' || s.themes.indexOf(curFilter) >= 0;
+    if (show) { if (!map.hasLayer(markers[s.id])) markers[s.id].addTo(map); }
+    else if (map.hasLayer(markers[s.id])) map.removeLayer(markers[s.id]);
+  });
+}
+function render(){ buildChips(); buildList(); syncMarkers(); syncSubLayers(); }
+render();
+
+document.addEventListener('click', function(e){
+  var b = e.target.closest ? e.target.closest('button[data-cp]') : null;
+  if (!b) return;
+  var txt = b.getAttribute('data-cp');
+  function done(){ b.textContent = '已复制'; setTimeout(function(){ b.textContent = '复制坐标'; }, 1400); }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, done);
+  else { var ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(x){} document.body.removeChild(ta); done(); }
+});
+document.addEventListener('click', function(e){
+  var b = e.target.closest ? e.target.closest('.p3dopen') : null;
+  if (!b) return;
+  if (!window.QIN || !QIN.pano) return;
+  map.closePopup();
+  QIN.pano.open({
+    name: b.getAttribute('data-name'),
+    lat: +b.getAttribute('data-lat'), lon: +b.getAttribute('data-lon'),
+    yaw: +b.getAttribute('data-yaw') || 0,
+    targets: allTargets()
+  });
+});
+</script>
+</body>
+</html>

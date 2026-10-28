@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """给 4 张手写专题页(qinling/hubei/henan/yellow-river)打自动标注补丁"""
-import io, re
+import io, os, re
 
 CSS = u'''.slabel{background:transparent!important;border:none!important;box-shadow:none!important;font:600 11px "PingFang SC","Microsoft YaHei",sans-serif;color:#22304a;text-shadow:0 0 3px #fff,0 0 5px #fff,0 0 7px #fff;padding:0;margin:0 0 0 4px!important}
 .leaflet-tooltip.slabel::before{display:none}
@@ -38,7 +38,7 @@ PARK_NEW = PARK_OLD
 CSS_ANCHOR = u".subrow .sn .p3dopen{float:right;font-size:11px;padding:0 7px;line-height:19px;border-radius:5px}"
 
 for f in ['qinling-map.html', 'hubei-map.html', 'henan-map.html', 'yellow-river-map.html']:
-    p = 'D:/Program/Travel/' + f
+    p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'maps', f)
     s = io.open(p, encoding='utf-8').read()
     if 'syncTips' in s:
         print('skip(already)', f); continue

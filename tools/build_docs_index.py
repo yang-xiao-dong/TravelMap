@@ -3,7 +3,7 @@
 
 用法: python tools/build_docs_index.py
 输入: docs/spots/<拼音>.md（README.md 除外）
-输出: spots-browser.html（仓库根目录）
+输出: browser/spots-browser.html
 
 md 格式锚点（由文档规范保证）:
   # <标题>
@@ -23,7 +23,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOCS = os.path.join(ROOT, 'docs', 'spots')
-OUT = os.path.join(ROOT, 'spots-browser.html')
+OUT = os.path.join(ROOT, 'browser', 'spots-browser.html')
 
 CN = {
     'anhui': '安徽', 'beijing': '北京', 'chongqing': '重庆', 'fujian': '福建',
@@ -195,8 +195,8 @@ def parse_doc(path):
         spot['name'] = parts[i + 1].strip()
         spots.append(spot)
     maphtml = None
-    if os.path.exists(os.path.join(ROOT, key + '-map.html')):
-        maphtml = key + '-map.html'
+    if os.path.exists(os.path.join(ROOT, 'maps', key + '-map.html')):
+        maphtml = 'maps/' + key + '-map.html'
     return {
         'key': key, 'cn': CN.get(key, key), 'title': title,
         'calendar': calendar, 'local': local, 'lodging': lodging,

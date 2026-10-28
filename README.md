@@ -11,22 +11,34 @@
 ## 结构
 
 ```
-index.html          入口（模块版）
-css/style.css       样式
+index.html              门户入口（全国总图 + 34 省区/专题卡片导航）
+maps/                   全部地图页（30 省区图 + 秦岭/黄河专题 + 5A 总图 map-5a.html）
+browser/
+  spots-browser.html    景点深度档案全文检索页（由 docs/spots/*.md 生成，单文件零依赖）
+css/style.css           样式
+data/                   各省数据源 json + 门户聚合数据 all.js/all.json + poetry 诗词
+docs/                   深度档案（docs/spots/）与调研笔记
 js/
-  data-china.js     省界 GeoJSON 数据（数据模块）
-  data-spots.js     358 家景区数据：[名称, 省份, 年份, 经度, 纬度, 类别]
-  geo.js            墨卡托投影与范围计算
-  model.js          统计与索引派生
-  map.js            地图渲染、缩放动画、点位形状
-  panel.js          排行/清单/搜索面板
-  interact.js       悬浮提示、复制、信息卡
-  app.js            全局状态与装配
-tools/build.py      单文件打包脚本
+  data-china.js         省界 GeoJSON 数据（数据模块）
+  data-spots.js         358 家景区数据：[名称, 省份, 年份, 经度, 纬度, 类别]
+  geo.js                墨卡托投影与范围计算
+  model.js              统计与索引派生
+  map.js                地图渲染、缩放动画、点位形状
+  panel.js              排行/清单/搜索面板
+  interact.js           悬浮提示、复制、信息卡
+  app.js                全局状态与装配
+  qinling/              人视模拟模块（dem/sun/pano/texture，各地图页复用）
+lib/                    Leaflet 本地副本
+tools/
+  build.py              单文件打包脚本
+  gen_theme_map.py      省区采风图生成器：data/<拼音>.json -> maps/<拼音>-map.html
+  build_docs_index.py   档案索引生成器：docs/spots/*.md -> browser/spots-browser.html
+  patch_labels.py       手写专题页（秦岭/湖北/河南/黄河）自动标注补丁
 ```
 
 模块通过 `window.M5A` / `window.DATA5A` 命名空间协作，使用普通 script 标签加载
-（非 ES Module），保证 `file://` 协议双击可用。
+（非 ES Module），保证 `file://` 协议双击可用；页面均用相对路径引用资产，
+根目录、maps/、browser/ 下双击打开均可正常加载。
 
 ## 数据说明
 
