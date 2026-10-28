@@ -113,6 +113,8 @@ var CAT = __CAT__;
 var SPOTS = __SPOTS__;
 var LODGING = __LODGING__;
 var LOCAL = __LOCAL__;
+var ROUTE = __ROUTE__;
+var ROUTE_NAME = __ROUTE_NAME__;
 var REGION_ORDER = __REGION_ORDER__;
 
 var map = L.map('map', { zoomControl:true, minZoom:__MINZOOM__, maxZoom:18 }).setView([__CLAT__, __CLON__], __ZINIT__);
@@ -165,6 +167,7 @@ function subPopup(s, u){
   return '<div class="pp-name" style="font-size:14px">' + u.n + '</div>'
     + '<div class="pp-region">' + s.name + ' · 小景点/机位</div>'
     + '<div class="pp-coord"><span>' + coordTxt(u.lat, u.lon) + '</span>' + copyBtn(coordTxt(u.lat, u.lon)) + '</div>'
+    + (u.km ? '<div class="pp-row"><b class="k">里程桩</b>　' + u.km + '</div>' : '')
     + '<div class="pp-row"><b class="k">机位要点</b>　' + u.tip + '</div>'
     + '<div style="margin:7px 0 4px"><button class="p3dopen" data-lat="' + u.lat + '" data-lon="' + u.lon + '" data-name="' + u.n + '" data-yaw="' + yaw.toFixed(0) + '">👁 人视模拟 · 环顾山形</button></div>'
     + '<div class="pp-links"><a href="https://cn.bing.com/maps?q=' + coordTxt(u.lat, u.lon) + '" target="_blank" rel="noopener">Bing 卫星对照 →</a></div>';
@@ -213,6 +216,10 @@ LODGING.forEach(function(u){
   L.marker([u.lat, u.lon], {icon:di, title:u.n}).bindPopup(stayPopup(u), {maxWidth:280}).addTo(stayLayer);
 });
 if (LODGING.length) stayLayer.addTo(map);
+if (ROUTE.length > 1) {
+  L.polyline(ROUTE, {color:'#5c4a1a', weight:4, opacity:.85})
+    .bindTooltip(ROUTE_NAME + ' 走向（示意）').addTo(map);
+}
 LOCAL.forEach(function(u){
   if (u.lon == null) return;
   var di = L.divIcon({ className:'', iconSize:[18,18], iconAnchor:[9,9], popupAnchor:[0,-9],
@@ -221,7 +228,9 @@ LOCAL.forEach(function(u){
 });
 if (LOCAL.some(function(u){ return u.lon != null; })) localLayer.addTo(map);
 
-var gb = L.latLngBounds(SPOTS.concat(LODGING).map(function(s){ return [s.lat, s.lon]; }));
+var _gbPts = SPOTS.concat(LODGING).map(function(s){ return [s.lat, s.lon]; });
+if (ROUTE.length > 1) _gbPts = _gbPts.concat(ROUTE);
+var gb = L.latLngBounds(_gbPts);
 function fitAll(){ map.invalidateSize(); map.setView(gb.getCenter(), map.getBoundsZoom(gb, true, L.point(46,46)), {animate:false}); }
 fitAll();
 window.addEventListener('load', function(){ setTimeout(fitAll, 80); });
@@ -404,14 +413,15 @@ def main(path):
     for k, v in (d.get('cat_extra') or {}).items():
         cats[k] = v
     # 白名单字段（多余的 coord_confidence 等调试字段不进页面）
-    keep_spot = ('id','name','region','lon','lat','alt','g5','np','cat','themes','win','note','tips','story','poems','subs')
-    keep_sub = ('n','lon','lat','yaw','tip')
+    keep_spot = ('id','name','region','lon','lat','alt','g5','np','cat','themes','win','note','tips','story','poems','km','subs')
+    keep_sub = ('n','lon','lat','yaw','tip','km')
     spots = []
     for s in d['spots']:
         s2 = {k: s[k] for k in keep_spot if k in s}
         s2['subs'] = [{k: u[k] for k in keep_sub if k in u} for u in s['subs']]
         spots.append(s2)
     lodging = [{k: u[k] for k in ('n','lon','lat','type','tip') if k in u} for u in (d.get('lodging') or [])]
+    route = [[p[0], p[1]] for p in (d.get('route') or [])]
     local = [{k: u[k] for k in ('n','type','region','month','tip','lon','lat') if k in u} for u in (d.get('local') or [])]
     html = (TPL
         .replace('__TITLE__', d['title'])
@@ -425,6 +435,8 @@ def main(path):
         .replace('__SPOTS__', json.dumps(spots, ensure_ascii=False))
         .replace('__LODGING__', json.dumps(lodging, ensure_ascii=False))
         .replace('__LOCAL__', json.dumps(local, ensure_ascii=False))
+        .replace('__ROUTE__', json.dumps(route, ensure_ascii=False))
+        .replace('__ROUTE_NAME__', json.dumps(d.get('route_name', d['title']), ensure_ascii=False))
         .replace('__REGION_ORDER__', json.dumps(d['region_order'], ensure_ascii=False))
         .replace('__MINZOOM__', str(d.get('min_zoom', 6)))
         .replace('__CLAT__', str(d['center'][0]))
