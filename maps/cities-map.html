@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>城市专题总览 · 31 省 92 城</title>
+<link rel="stylesheet" href="../lib/leaflet.css">
+<style>
+:root{ --accent:#c2255c; --ink:#22304a; --sub:#64748b; --line:#e2e8f0; --bg:#f6f8fb; }
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;color:var(--ink);background:var(--bg)}
+.layout{display:grid;grid-template-columns:340px 1fr;grid-template-rows:auto 1fr;height:100vh}
+header{grid-column:1/-1;display:flex;align-items:baseline;gap:14px;padding:12px 18px 10px;border-bottom:1px solid var(--line);background:#fff;flex-wrap:wrap}
+header h1{font-family:Georgia,"Songti SC",serif;font-size:21px;color:var(--accent);letter-spacing:.5px}
+header .sub{font-size:12px;color:var(--sub);flex:1}
+header .sub a{color:var(--accent);text-decoration:none}
+header a.back{font-size:13px;color:var(--accent);text-decoration:none;border:1px solid var(--accent);border-radius:6px;padding:3px 10px;white-space:nowrap}
+header a.back:hover{background:var(--accent);color:#fff}
+aside{overflow-y:auto;border-right:1px solid var(--line);background:#fff;padding:12px 14px 20px}
+.intro{font-size:12px;color:var(--sub);line-height:1.7;background:#fdf2f6;border:1px solid #f4d4e0;border-radius:8px;padding:8px 10px;margin-bottom:10px}
+.intro b{color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chip{font-size:12px;padding:3px 10px;border:1px solid var(--line);border-radius:999px;cursor:pointer;background:#fff;user-select:none}
+.chip.on{color:#fff;border-color:transparent;background:var(--ink)}
+.prog{font-size:11.5px;color:var(--sub);margin-bottom:8px}
+.prog b{color:var(--accent)}
+.grp{font-size:12px;color:var(--sub);margin:12px 0 4px;font-weight:600;letter-spacing:1px}
+.grp em{font-style:normal;color:#2f9e44;font-weight:400}
+.grp em.todo{color:#adb5bd}
+.crow{display:flex;align-items:center;gap:7px;padding:5px 7px;border-radius:8px;cursor:pointer;font-size:13px}
+.crow:hover{background:var(--bg)}
+.crow .st{flex:none;width:16px;text-align:center;font-size:11px}
+.crow .nm{font-weight:600}
+.crow .tagb{font-size:9.5px;border-radius:4px;padding:1px 5px;margin-left:4px;vertical-align:1px}
+.tcap{background:#fde3e3;color:#c2255c;border:1px solid #f3c1c1}
+.tsub{background:#edeafd;color:#6741d9;border:1px solid #d9cffb}
+.crow .meta{margin-left:auto;font-size:11px;color:var(--sub)}
+.crow.off{color:#93a0b4}
+.crow.off .nm{font-weight:500}
+#map{height:100%;background:#dfe6ee}
+.leaflet-container{font-family:inherit}
+.leaflet-popup-content{font-size:13px;line-height:1.6;margin:10px 14px}
+.mlabel{background:transparent!important;border:none!important;box-shadow:none!important;font:600 11px "PingFang SC","Microsoft YaHei",sans-serif;color:#22304a;text-shadow:0 0 3px #fff,0 0 5px #fff,0 0 7px #fff;padding:0;margin:0 0 0 5px!important;white-space:nowrap;pointer-events:none}
+.leaflet-tooltip.mlabel::before{display:none}
+.legend{font-size:11.5px;color:var(--sub);line-height:1.9;margin-bottom:6px}
+@media (max-width:760px){.layout{grid-template-columns:1fr;grid-template-rows:auto 34vh 1fr}aside{border-right:none;border-bottom:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <header>
+    <h1>城市采风专题 · 总览</h1>
+    <span class="sub" id="subhead">31 省级行政区 · 每省至少 3 城 · 省会/首府与 15 个副省级城市优先 · <a href="../index.html">← 规划中心</a></span>
+    <a class="back" href="../index.html">返回首页</a>
+  </header>
+  <aside>
+    <div class="intro">城市专题以<b>城市建成区与近郊</b>为单位组织机位：天际线、古城街区、江河夜色、市井烟火与周边一小时圈。31 省 <b>92 城</b>分批上线，省会与副省级城市优先，已上线城市点击直达。</div>
+    <div class="legend">
+      <span style="color:#c2255c">★ 省会/首府（直辖市同）</span>　<span style="color:#6741d9">◆ 副省级市</span>　<span style="color:#1c7ed6">● 地级选点</span>　<span style="color:#adb5bd">○ 规划中</span>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="prog" id="prog"></div>
+    <div id="list"></div>
+  </aside>
+  <div id="map"></div>
+</div>
+
+<script src="../lib/leaflet.js"></script>
+<script src="../data/cities.js?v=1"></script>
+<script>
+var map = L.map('map', { zoomControl:true, minZoom:4, maxZoom:12 }).setView([35.5, 105], 4);
+var sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  { maxZoom:12, attribution:'影像 © Esri' }).addTo(map);
+var topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+  { maxZoom:12, subdomains:'abc', attribution:'© OpenStreetMap, SRTM | © OpenTopoMap (CC-BY-SA)' });
+L.control.layers({'卫星影像':sat,'等高线地形':topo}, null, {position:'topright'}).addTo(map);
+L.control.scale({imperial:false, position:'bottomleft'}).addTo(map);
+
+var META = CITIES.meta, LIST = CITIES.list;
+document.getElementById('subhead').innerHTML =
+  '31 省级行政区 · 每省至少 3 城 · 省会/首府与 15 个副省级城市优先 · <a href="../index.html">← 规划中心</a>';
+
+function iconFor(c){
+  if (c.capital) return L.divIcon({ className:'', iconSize:[18,18], iconAnchor:[9,9],
+    html:'<div style="width:17px;height:17px;line-height:17px;text-align:center;font-size:15px;color:#c2255c;text-shadow:0 0 3px #fff,0 0 2px #fff,0 1px 2px rgba(0,0,0,.4);font-weight:700">★</div>' });
+  if (c.subpro) return L.divIcon({ className:'', iconSize:[12,12], iconAnchor:[6,6],
+    html:'<div style="width:11px;height:11px;transform:rotate(45deg);background:#6741d9;box-shadow:0 0 0 2px #fff,0 1px 3px rgba(0,0,0,.4)"></div>' });
+  if (c.done) return L.divIcon({ className:'', iconSize:[11,11], iconAnchor:[5.5,5.5],
+    html:'<div style="width:10px;height:10px;border-radius:50%;background:#1c7ed6;box-shadow:0 0 0 2px #fff,0 1px 3px rgba(0,0,0,.4)"></div>' });
+  return L.divIcon({ className:'', iconSize:[11,11], iconAnchor:[5.5,5.5],
+    html:'<div style="width:9px;height:9px;border-radius:50%;background:#fff;border:2px solid #adb5bd"></div>' });
+}
+function popFor(c){
+  var tags = (c.capital ? '<span class="tagb tcap">省会/直辖市</span>' : '') + (c.subpro ? '<span class="tagb tsub">副省级</span>' : '');
+  if (c.done) return '<b>' + c.name + '</b>' + tags
+    + '<br><span style="color:#64748b">' + c.n + ' 景区 · ' + c.m + ' 机位</span>'
+    + '<br><a href="city-' + c.pinyin + '-map.html" style="color:#c2255c">进入' + c.name + '城市专题 →</a>';
+  return '<b>' + c.name + '</b>' + tags + '<br><span style="color:#adb5bd">规划中 · 分批上线</span>';
+}
+var markers = [];
+LIST.forEach(function (c) {
+  var m = L.marker([c.lat, c.lon], {icon:iconFor(c)}).addTo(map)
+    .bindPopup(popFor(c), {maxWidth:230});
+  m.bindTooltip(c.name, {direction:'right', className:'mlabel', offset:[7,-6]});
+  m._c = c;
+  markers.push(m);
+});
+function syncTips(){
+  var z = map.getZoom();
+  markers.forEach(function (m) { if (z >= 6) m.openTooltip(); else m.closeTooltip(); });
+}
+map.on('zoomend', syncTips); syncTips();
+
+var curF = 'all';
+var FIL = [['all','全部'],['done','只看已上线'],['cap','省会·副省级']];
+var chipsEl = document.getElementById('chips');
+FIL.forEach(function (p, i) {
+  var d = document.createElement('span');
+  d.className = 'chip' + (i === 0 ? ' on' : '');
+  d.textContent = p[1];
+  d.onclick = function () {
+    chipsEl.querySelectorAll('.chip').forEach(function (x){ x.className='chip'; });
+    d.className = 'chip on';
+    curF = p[0]; render();
+  };
+  chipsEl.appendChild(d);
+});
+function pass(c){
+  if (curF === 'done') return c.done;
+  if (curF === 'cap') return c.capital || c.subpro;
+  return true;
+}
+var listEl = document.getElementById('list');
+function render(){
+  listEl.innerHTML = '';
+  var byProv = {};
+  LIST.forEach(function (c) { (byProv[c.prov] = byProv[c.prov] || []).push(c); });
+  Object.keys(byProv).forEach(function (pv) {
+    var cs = byProv[pv];
+    var live = cs.filter(function(c){ return c.done; }).length;
+    var g = document.createElement('div');
+    g.className = 'grp';
+    g.innerHTML = pv + ' <em class="' + (live === cs.length ? '' : 'todo') + '">' + (live === cs.length ? '全省已上线' : live + '/' + cs.length) + '</em>';
+    listEl.appendChild(g);
+    cs.forEach(function (c) {
+      var r = document.createElement('div');
+      r.className = 'crow' + (c.done ? '' : ' off');
+      r.innerHTML = '<span class="st">' + (c.done ? '<span style="color:#2f9e44">✔</span>' : '<span style="color:#ced4da">○</span>') + '</span>'
+        + '<span class="nm">' + c.name
+        + (c.capital ? '<span class="tagb tcap">省会</span>' : '')
+        + (c.subpro ? '<span class="tagb tsub">副省级</span>' : '') + '</span>'
+        + (c.done ? '<span class="meta">' + c.n + '景区 ' + c.m + '机位</span>' : '<span class="meta">规划中</span>');
+      r.onclick = function () {
+        map.flyTo([c.lat, c.lon], 8, {duration:.8});
+        setTimeout(function () {
+          markers.forEach(function (m) { if (m._c === c) m.openPopup(); });
+        }, 850);
+      };
+      listEl.appendChild(r);
+    });
+  });
+  document.getElementById('prog').innerHTML =
+    '进度：<b>' + META.done + '/' + META.total + '</b> 城已上线 · <b>' + META.provsDone + '/' + META.provs + '</b> 省完成'
+    + '（' + Math.round(META.done * 100 / META.total) + '%）';
+}
+render();
+</script>
+</body>
+</html>

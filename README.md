@@ -11,13 +11,14 @@
 ## 结构
 
 ```
-index.html              门户入口（全国总图 + 34 省区/专题卡片导航）
-maps/                   全部地图页（30 省区图 + 秦岭/黄河专题 + 5A 总图 map-5a.html）
+index.html              门户入口（全国总图 + 16 条国道走向线叠加 + 34 省区/公路/城市专题卡片导航）
+maps/                   全部地图页（省区图 + 16 条国道专题 + 城市专题 city-*-map.html + 城市总览 cities-map.html + 秦岭/黄河专题 + 5A 总图）
 browser/
   spots-browser.html    景点深度档案全文检索页（由 docs/spots/*.md 生成，单文件零依赖）
 css/style.css           样式
-data/                   各省数据源 json + 门户聚合数据 all.js/all.json + poetry 诗词
-docs/                   深度档案（docs/spots/）与调研笔记
+data/                   各省数据源 json + 门户聚合数据 all.js/all.json/roads.js/cities.js + poetry 诗词
+                        data/cities/ 城市专题数据（manifest.json 为 31 省 92 城全覆盖清单）
+docs/                   深度档案（docs/spots/）、调研笔记与城市专题推进计划（docs/cities-plan.md）
 js/
   data-china.js         省界 GeoJSON 数据（数据模块）
   data-spots.js         358 家景区数据：[名称, 省份, 年份, 经度, 纬度, 类别]
@@ -31,9 +32,12 @@ js/
 lib/                    Leaflet 本地副本
 tools/
   build.py              单文件打包脚本
-  gen_theme_map.py      省区采风图生成器：data/<拼音>.json -> maps/<拼音>-map.html
+  gen_theme_map.py      主题采风图生成器：data/*.json -> maps/<拼音>-map.html（省区/国道/城市通用）
   build_docs_index.py   档案索引生成器：docs/spots/*.md -> browser/spots-browser.html
+  gen_roads_js.py       国道走廊聚合：data/g*.json -> data/roads.js（首页走向线叠加）
+  build_cities_index.py 城市索引：data/cities/* -> data/cities.js（总览图与进度）
   patch_labels.py       手写专题页（秦岭/湖北/河南/黄河）自动标注补丁
+  validate_data.py      数据契约校验
 ```
 
 模块通过 `window.M5A` / `window.DATA5A` 命名空间协作，使用普通 script 标签加载

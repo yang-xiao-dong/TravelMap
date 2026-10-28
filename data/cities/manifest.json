@@ -1,0 +1,124 @@
+{
+  "note": "城市专题全覆盖清单：31 省级行政区 × 每省至少 3 城（直辖市为单城）。capital=省会/首府/直辖市，subpro=副省级市。上线状态由 data/cities/<pinyin>.json 是否存在动态判定（tools/build_cities_index.py）。",
+  "provinces": [
+    {"prov": "北京", "cities": [{"pinyin": "beijing", "name": "北京", "capital": true}]},
+    {"prov": "天津", "cities": [{"pinyin": "tianjin", "name": "天津", "capital": true}]},
+    {"prov": "上海", "cities": [{"pinyin": "shanghai", "name": "上海", "capital": true}]},
+    {"prov": "重庆", "cities": [{"pinyin": "chongqing", "name": "重庆", "capital": true}]},
+    {"prov": "河北", "cities": [
+      {"pinyin": "shijiazhuang", "name": "石家庄", "capital": true},
+      {"pinyin": "tangshan", "name": "唐山"},
+      {"pinyin": "qinhuangdao", "name": "秦皇岛"},
+      {"pinyin": "chengde", "name": "承德"}]},
+    {"prov": "山西", "cities": [
+      {"pinyin": "taiyuan", "name": "太原", "capital": true},
+      {"pinyin": "datong", "name": "大同"},
+      {"pinyin": "yuncheng", "name": "运城"}]},
+    {"prov": "内蒙古", "cities": [
+      {"pinyin": "huhehaote", "name": "呼和浩特", "capital": true},
+      {"pinyin": "baotou", "name": "包头"},
+      {"pinyin": "hulunbeier", "name": "呼伦贝尔"},
+      {"pinyin": "eerduosi", "name": "鄂尔多斯"}]},
+    {"prov": "辽宁", "cities": [
+      {"pinyin": "shenyang", "name": "沈阳", "capital": true, "subpro": true},
+      {"pinyin": "dalian", "name": "大连", "subpro": true},
+      {"pinyin": "dandong", "name": "丹东"}]},
+    {"prov": "吉林", "cities": [
+      {"pinyin": "changchun", "name": "长春", "capital": true, "subpro": true},
+      {"pinyin": "jilin", "name": "吉林市"},
+      {"pinyin": "yanji", "name": "延吉"}]},
+    {"prov": "黑龙江", "cities": [
+      {"pinyin": "haerbin", "name": "哈尔滨", "capital": true, "subpro": true},
+      {"pinyin": "mudanjiang", "name": "牡丹江"},
+      {"pinyin": "qiqihaer", "name": "齐齐哈尔"}]},
+    {"prov": "江苏", "cities": [
+      {"pinyin": "nanjing", "name": "南京", "capital": true, "subpro": true},
+      {"pinyin": "suzhou", "name": "苏州"},
+      {"pinyin": "wuxi", "name": "无锡"},
+      {"pinyin": "yangzhou", "name": "扬州"}]},
+    {"prov": "浙江", "cities": [
+      {"pinyin": "hangzhou", "name": "杭州", "capital": true, "subpro": true},
+      {"pinyin": "ningbo", "name": "宁波", "subpro": true},
+      {"pinyin": "wenzhou", "name": "温州"}]},
+    {"prov": "安徽", "cities": [
+      {"pinyin": "hefei", "name": "合肥", "capital": true},
+      {"pinyin": "huangshan", "name": "黄山市"},
+      {"pinyin": "wuhu", "name": "芜湖"}]},
+    {"prov": "福建", "cities": [
+      {"pinyin": "fuzhou", "name": "福州", "capital": true},
+      {"pinyin": "xiamen", "name": "厦门", "subpro": true},
+      {"pinyin": "quanzhou", "name": "泉州"}]},
+    {"prov": "江西", "cities": [
+      {"pinyin": "nanchang", "name": "南昌", "capital": true},
+      {"pinyin": "ganzhou", "name": "赣州"},
+      {"pinyin": "jiujiang", "name": "九江"}]},
+    {"prov": "山东", "cities": [
+      {"pinyin": "jinan", "name": "济南", "capital": true, "subpro": true},
+      {"pinyin": "qingdao", "name": "青岛", "subpro": true},
+      {"pinyin": "yantai", "name": "烟台"},
+      {"pinyin": "weihai", "name": "威海"}]},
+    {"prov": "河南", "cities": [
+      {"pinyin": "zhengzhou", "name": "郑州", "capital": true},
+      {"pinyin": "luoyang", "name": "洛阳"},
+      {"pinyin": "kaifeng", "name": "开封"},
+      {"pinyin": "anyang", "name": "安阳"}]},
+    {"prov": "湖北", "cities": [
+      {"pinyin": "wuhan", "name": "武汉", "capital": true, "subpro": true},
+      {"pinyin": "yichang", "name": "宜昌"},
+      {"pinyin": "xiangyang", "name": "襄阳"}]},
+    {"prov": "湖南", "cities": [
+      {"pinyin": "changsha", "name": "长沙", "capital": true},
+      {"pinyin": "zhangjiajie", "name": "张家界"},
+      {"pinyin": "yueyang", "name": "岳阳"}]},
+    {"prov": "广东", "cities": [
+      {"pinyin": "guangzhou", "name": "广州", "capital": true, "subpro": true},
+      {"pinyin": "shenzhen", "name": "深圳", "subpro": true},
+      {"pinyin": "chaozhou", "name": "潮州"},
+      {"pinyin": "zhuhai", "name": "珠海"}]},
+    {"prov": "广西", "cities": [
+      {"pinyin": "nanning", "name": "南宁", "capital": true},
+      {"pinyin": "guilin", "name": "桂林"},
+      {"pinyin": "beihai", "name": "北海"}]},
+    {"prov": "海南", "cities": [
+      {"pinyin": "haikou", "name": "海口", "capital": true},
+      {"pinyin": "sanya", "name": "三亚"},
+      {"pinyin": "danzhou", "name": "儋州"}]},
+    {"prov": "四川", "cities": [
+      {"pinyin": "chengdu", "name": "成都", "capital": true, "subpro": true},
+      {"pinyin": "leshan", "name": "乐山"},
+      {"pinyin": "xichang", "name": "西昌"}]},
+    {"prov": "贵州", "cities": [
+      {"pinyin": "guiyang", "name": "贵阳", "capital": true},
+      {"pinyin": "zunyi", "name": "遵义"},
+      {"pinyin": "anshun", "name": "安顺"}]},
+    {"prov": "云南", "cities": [
+      {"pinyin": "kunming", "name": "昆明", "capital": true},
+      {"pinyin": "dali", "name": "大理"},
+      {"pinyin": "lijiang", "name": "丽江"}]},
+    {"prov": "西藏", "cities": [
+      {"pinyin": "lasa", "name": "拉萨", "capital": true},
+      {"pinyin": "rikaze", "name": "日喀则"},
+      {"pinyin": "linzhi", "name": "林芝"}]},
+    {"prov": "陕西", "cities": [
+      {"pinyin": "xian", "name": "西安", "capital": true, "subpro": true},
+      {"pinyin": "yanan", "name": "延安"},
+      {"pinyin": "hanzhong", "name": "汉中"}]},
+    {"prov": "甘肃", "cities": [
+      {"pinyin": "lanzhou", "name": "兰州", "capital": true},
+      {"pinyin": "dunhuang", "name": "敦煌"},
+      {"pinyin": "zhangye", "name": "张掖"}]},
+    {"prov": "青海", "cities": [
+      {"pinyin": "xining", "name": "西宁", "capital": true},
+      {"pinyin": "geermu", "name": "格尔木"},
+      {"pinyin": "yushu", "name": "玉树"}]},
+    {"prov": "宁夏", "cities": [
+      {"pinyin": "yinchuan", "name": "银川", "capital": true},
+      {"pinyin": "zhongwei", "name": "中卫"},
+      {"pinyin": "guyuan", "name": "固原"}]},
+    {"prov": "新疆", "cities": [
+      {"pinyin": "wulumuqi", "name": "乌鲁木齐", "capital": true},
+      {"pinyin": "kashi", "name": "喀什"},
+      {"pinyin": "yining", "name": "伊宁"},
+      {"pinyin": "tulufan", "name": "吐鲁番"}]}
+  ]
+}

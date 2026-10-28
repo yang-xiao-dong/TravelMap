@@ -71,6 +71,8 @@ td.m.cur{color:#fff;background:var(--accent)}
 .plabel{font:700 13px/1 "PingFang SC","Microsoft YaHei",sans-serif;color:#22304a;text-shadow:0 0 3px #fff,0 0 5px #fff,0 0 8px #fff;white-space:nowrap;pointer-events:none}
 .slabel{background:transparent!important;border:none!important;box-shadow:none!important;font:600 11px "PingFang SC","Microsoft YaHei",sans-serif;color:#22304a;text-shadow:0 0 3px #fff,0 0 5px #fff,0 0 7px #fff;padding:0;margin:0 0 0 3px!important}
 .leaflet-tooltip.slabel::before{display:none}
+.rlabel{background:transparent!important;border:none!important;box-shadow:none!important;font:700 10.5px/1 "PingFang SC","Microsoft YaHei",sans-serif;color:#5c4a1a;text-shadow:0 0 3px #fff,0 0 5px #fff,0 0 7px #fff;padding:0;margin:0!important;white-space:nowrap;pointer-events:none}
+.leaflet-tooltip.rlabel::before{display:none}
 .leaflet-popup-content{font-size:13px;line-height:1.55;margin:10px 14px;min-width:210px}
 @media (max-width:760px){.row-now{grid-template-columns:60px 1fr}}
 </style>
@@ -94,6 +96,13 @@ td.m.cur{color:#fff;background:var(--accent)}
       <div class="stats"><div><b>472</b><span> 景区</span></div><div><b>1479</b><span> 机位</span></div><div><b>32</b><span> 区域文档</span></div></div>
       <ul><li>搜索关键词直达风土人情与机位拍法</li><li>详情页一键跳转对应省份地图</li></ul>
       <div class="go">打开景点检索 →</div>
+    </a>
+    <a class="card" href="maps/cities-map.html" style="--c:#c2255c">
+      <div class="top"><h3>城市采风专题</h3><em>31 省 · 92 城全覆盖</em></div>
+      <div class="desc">以城市为单位组织机位：天际线夜色、古城街区、江河湖海界面与市井烟火 · 省会/首府与 15 个副省级城市优先 · 每省至少 3 城 · 分批上线</div>
+      <div class="stats"><div><b>92</b><span> 计划城市</span></div><div><b>9</b><span> 已上线</span></div><div><b>31</b><span> 省全覆盖</span></div></div>
+      <ul><li>首批：云南/甘肃/山西 9 城完整上线</li><li>总览图一屏看 31 省进度与直达入口</li></ul>
+      <div class="go">打开城市总览 →</div>
     </a>
     <a class="card" href="maps/map-5a.html" style="--c:#1f5fa8">
       <div class="top"><h3>全国 5A 分布</h3><em>总览底图 · 358 家</em></div>
@@ -336,18 +345,19 @@ td.m.cur{color:#fff;background:var(--accent)}
   </div>
 
   <div class="allmap">
-    <h2>🗺 全国采风总览 · <b id="am-count">—</b> 个景区按真实坐标分布 · 按省份/题材筛选 · 点击查看详情并直达省专题</h2>
+    <h2>🗺 全国采风总览 · <b id="am-count">—</b> 个景区按真实坐标分布 · <b id="am-roadn">—</b> 条景观国道走向线可开关 · 点击线路直达公路专题</h2>
     <div class="am-bar">
       <select id="am-prov"><option value="all">全部省份（32）</option></select>
       <div class="chips2" id="am-cats"></div>
       <label class="am-tog"><input type="checkbox" id="am-5a"> 只看 5A</label>
       <label class="am-tog"><input type="checkbox" id="am-np"> 含国家公园</label>
       <label class="am-tog"><input type="checkbox" id="am-cu"> 人文同框</label>
+      <label class="am-tog"><input type="checkbox" id="am-road" checked> 🛣 国道走廊</label>
     </div>
     <div id="allmap"></div>
   </div>
 
-  <h2 style="font-size:15px;color:var(--ink);margin:6px 0 10px">🛣 公路走廊 · 每条国道一个专题（工作流产出 · 166 景区 / 445 机位）</h2>
+  <h2 style="font-size:15px;color:var(--ink);margin:6px 0 10px">🛣 公路走廊 · 16 条景观国道（走向线已叠加全国总览图 · 248 景区 / 615 机位）</h2>
   <div class="cards">
     <a class="card" href="maps/g318-map.html" style="--c:#c2255c"><div class="top"><h3>G318</h3><em>川藏南线</em></div><div class="desc">折多山 · 新都桥 · 理塘 · 姊妹湖 · 72拐 · 然乌 · 波密桃花 · 色季拉</div><div class="stats"><div><b>17</b><span> 景区</span></div><div><b>49</b><span> 机位</span></div></div><div class="go">进入 →</div></a>
     <a class="card" href="maps/g317-map.html" style="--c:#f08c00"><div class="top"><h3>G317</h3><em>川藏北线</em></div><div class="desc">四姑娘山 · 丹巴 · 色达 · 雀儿山 · 德格印经院 · 孜珠寺</div><div class="stats"><div><b>16</b><span> 景区</span></div><div><b>37</b><span> 机位</span></div></div><div class="go">进入 →</div></a>
@@ -359,6 +369,26 @@ td.m.cur{color:#fff;background:var(--accent)}
     <a class="card" href="maps/g213-map.html" style="--c:#2f9e44"><div class="top"><h3>G213</h3><em>兰州—磨憨</em></div><div class="desc">炳灵寺 · 拉卜楞 · 郎木寺 · 若尔盖 · 九曲黄河 · 松潘</div><div class="stats"><div><b>15</b><span> 景区</span></div><div><b>42</b><span> 机位</span></div></div><div class="go">进入 →</div></a>
     <a class="card" href="maps/g228-map.html" style="--c:#1098ad"><div class="top"><h3>G228</h3><em>沿海大道</em></div><div class="desc">丹东 · 成山头 · 盐城鹤 · 崇明 · 舟山 · 霞浦滩涂 · 平潭 · 涠洲 · 东兴</div><div class="stats"><div><b>18</b><span> 景区</span></div><div><b>53</b><span> 机位</span></div></div><div class="go">进入 →</div></a>
     <a class="card" href="maps/g331-map.html" style="--c:#1c7ed6"><div class="top"><h3>G331</h3><em>北境大道</em></div><div class="desc">鸭绿江 · 长白山 · 兴凯湖 · 东极 · 北极村 · 额尔古纳 · 满洲里</div><div class="stats"><div><b>18</b><span> 景区</span></div><div><b>47</b><span> 机位</span></div></div><div class="go">进入 →</div></a>
+    <a class="card" href="maps/g217-map.html" style="--c:#2f9e44"><div class="top"><h3>G217</h3><em>独库公路</em></div><div class="desc">独山子大峡谷 · 哈希勒根达坂 · 唐布拉 · 那拉提 · 巴音布鲁克九曲 · 大小龙池 · 库车老城</div><div class="stats"><div><b>14</b><span> 景区</span></div><div><b>28</b><span> 机位</span></div></div><div class="go">进入 →</div></a>
+    <a class="card" href="maps/g312-map.html" style="--c:#e8590c"><div class="top"><h3>G312</h3><em>沪霍线 · 最长东西干线</em></div><div class="desc">人民广场零公里 · 南京长江大桥 · 麦积山 · 乌鞘岭长城 · 嘉峪关 · 星星峡 · 赛里木湖 · 霍尔果斯国门</div><div class="stats"><div><b>15</b><span> 景区</span></div><div><b>30</b><span> 机位</span></div></div><div class="go">进入 →</div></a>
+    <a class="card" href="maps/g320-map.html" style="--c:#e64980"><div class="top"><h3>G320</h3><em>沪瑞线</em></div><div class="desc">枫泾 · 富春江钓台 · 白沙奇雾 · 镇远古城 · 西江苗寨 · 黄果树 · 二十四道拐 · 大理 · 瑞丽一寨两国</div><div class="stats"><div><b>14</b><span> 景区</span></div><div><b>29</b><span> 机位</span></div></div><div class="go">进入 →</div></a>
+    <a class="card" href="maps/g108-map.html" style="--c:#7048e8"><div class="top"><h3>G108</h3><em>京昆线</em></div><div class="desc">卢沟桥 · 白石山 · 雁门关 · 平遥 · 党家村 · 秦岭老县城 · 洋县朱鹮 · 剑门关 · 邛海 · 元谋土林</div><div class="stats"><div><b>14</b><span> 景区</span></div><div><b>30</b><span> 机位</span></div></div><div class="go">进入 →</div></a>
+    <a class="card" href="maps/g212-map.html" style="--c:#f08c00"><div class="top"><h3>G212</h3><em>兰渝线</em></div><div class="desc">中山桥 · 哈达铺 · 官鹅沟 · 万象洞 · 文县天池 · 碧口茶乡 · 明月峡 · 阆中古城 · 钓鱼城 · 朝天门</div><div class="stats"><div><b>12</b><span> 景区</span></div><div><b>26</b><span> 机位</span></div></div><div class="go">进入 →</div></a>
+    <a class="card" href="maps/g210-map.html" style="--c:#087f5b"><div class="top"><h3>G210</h3><em>包南线</em></div><div class="desc">响沙湾 · 成吉思汗陵 · 镇北台 · 宝塔山 · 黄帝陵 · 秦岭分水岭 · 娄山关 · 遵义会址 · 青岩 · 青秀山</div><div class="stats"><div><b>13</b><span> 景区</span></div><div><b>27</b><span> 机位</span></div></div><div class="go">进入 →</div></a>
+  </div>
+
+  <h2 style="font-size:15px;color:var(--ink);margin:6px 0 10px">🏙 城市采风 · 31 省全覆盖（省会+副省级优先 · 每省至少 3 城 · 已上线 9/92）</h2>
+  <div class="cards">
+    <a class="card" href="maps/cities-map.html" style="--c:#c2255c"><div class="top"><h3>城市总览</h3><em>31 省 · 92 城</em></div><div class="desc">全国城市采风进度图：★省会 ◆副省级 ●地级选点，已上线直达、规划中留位，一屏看覆盖</div><div class="stats"><div><b>92</b><span> 计划</span></div><div><b>9</b><span> 已上线</span></div><div><b>3</b><span> 省完整</span></div></div><div class="go">打开总览 →</div></a>
+    <a class="card" href="maps/city-kunming-map.html" style="--c:#e8590c"><div class="top"><h3>昆明</h3><em>省会 · 春城</em></div><div class="desc">翠湖鸥阵 · 讲武堂 · 海埂 · 西山龙门 · 斗南花市夜拍 · 教场中路蓝花楹 · 石林</div><div class="stats"><div><b>8</b><span> 景区</span></div><div><b>16</b><span> 机位</span></div></div><div class="go">进入 →</div></a>
+    <a class="card" href="maps/city-dali-map.html" style="--c:#0ca678"><div class="top"><h3>大理</h3><em>苍洱之间</em></div><div class="desc">古城五华楼 · 三塔倒影 · 才村日出 · 喜洲稻田 · 海舌 · 双廊 · 寂照庵 · 小普陀</div><div class="stats"><div><b>8</b><span> 景区</span></div><div><b>18</b><span> 机位</span></div></div><div class="go">进入 →</div></a>
+    <a class="card" href="maps/city-lijiang-map.html" style="--c:#1098ad"><div class="top"><h3>丽江</h3><em>雪山古城</em></div><div class="desc">万古楼瓦海 · 黑龙潭雪山倒影 · 束河 · 甘海子日照金山 · 蓝月谷 · 白沙 · 拉市海</div><div class="stats"><div><b>7</b><span> 景区</span></div><div><b>15</b><span> 机位</span></div></div><div class="go">进入 →</div></a>
+    <a class="card" href="maps/city-lanzhou-map.html" style="--c:#f76707"><div class="top"><h3>兰州</h3><em>省会 · 黄河穿城</em></div><div class="desc">中山桥 · 黄河母亲 · 省博铜奔马 · 兰山灯海 · 大众巷早市 · 兴隆山红叶 · 什川梨花</div><div class="stats"><div><b>8</b><span> 景区</span></div><div><b>16</b><span> 机位</span></div></div><div class="go">进入 →</div></a>
+    <a class="card" href="maps/city-dunhuang-map.html" style="--c:#9a3412"><div class="top"><h3>敦煌</h3><em>丝路明珠</em></div><div class="desc">莫高窟 · 鸣沙山月牙泉 · 沙州夜市 · 阳关 · 玉门关 · 雅丹魔鬼城日落</div><div class="stats"><div><b>7</b><span> 景区</span></div><div><b>14</b><span> 机位</span></div></div><div class="go">进入 →</div></a>
+    <a class="card" href="maps/city-zhangye-map.html" style="--c:#e0a800"><div class="top"><h3>张掖</h3><em>七彩丹霞</em></div><div class="desc">大佛寺卧佛 · 甘州夜市 · 七彩丹霞两日票 · 冰沟 · 平山湖 · 马蹄寺 · 山丹军马场</div><div class="stats"><div><b>7</b><span> 景区</span></div><div><b>14</b><span> 机位</span></div></div><div class="go">进入 →</div></a>
+    <a class="card" href="maps/city-taiyuan-map.html" style="--c:#8a5a00"><div class="top"><h3>太原</h3><em>省会 · 晋阳古城</em></div><div class="desc">晋祠三绝 · 天龙山 · 蒙山大佛 · 古县城 · 食品街 · 汾河夜景 · 双塔牡丹 · 崛围红叶</div><div class="stats"><div><b>8</b><span> 景区</span></div><div><b>16</b><span> 机位</span></div></div><div class="go">进入 →</div></a>
+    <a class="card" href="maps/city-datong-map.html" style="--c:#b45309"><div class="top"><h3>大同</h3><em>古都 · 云冈</em></div><div class="desc">云冈大佛 · 古城墙 · 华严寺 · 九龙壁 · 悬空寺 · 火山群 · 市博螺旋</div><div class="stats"><div><b>7</b><span> 景区</span></div><div><b>15</b><span> 机位</span></div></div><div class="go">进入 →</div></a>
+    <a class="card" href="maps/city-yuncheng-map.html" style="--c:#2f9e44"><div class="top"><h3>运城</h3><em>关公故里 · 盐湖</em></div><div class="desc">七彩盐湖 · 解州关帝庙 · 鹳雀楼落日 · 普救寺 · 五老峰云海 · 永乐宫朝元图</div><div class="stats"><div><b>6</b><span> 景区</span></div><div><b>12</b><span> 机位</span></div></div><div class="go">进入 →</div></a>
   </div>
 
   <div class="cal">
@@ -376,6 +406,7 @@ td.m.cur{color:#fff;background:var(--accent)}
 
 <script src="lib/leaflet.js"></script>
 <script src="data/all.js"></script>
+<script src="data/roads.js?v=1"></script>
 <script>
 /* ---------- 全国采风总览图 ---------- */
 var AM_CAT = {
@@ -465,6 +496,33 @@ function amSyncTips() {
 am.on('zoomend', amSyncTips);
 am.on('moveend', amSyncTips);
 amRender();
+
+/* ---------- 国道走廊叠加（走向线串联全国图） ---------- */
+am.createPane('roadpane');
+am.getPane('roadpane').style.zIndex = 386;   /* 在景区点(400+)之下、影像之上 */
+var roadLayer = L.layerGroup().addTo(am), roadLabelLayer = L.layerGroup();
+(ROADS || []).forEach(function (r) {
+  if (!r.route || r.route.length < 2) return;
+  var pl = L.polyline(r.route, { pane:'roadpane', color:r.color, weight:3.2, opacity:.72 })
+    .bindTooltip(r.name + ' ' + r.label, { sticky:true, className:'slabel' })
+    .bindPopup('<b style="color:' + r.color + '">' + r.name + ' ' + r.label + '</b>'
+      + '<br><span style="color:#64748b">' + r.n + ' 景区 · ' + r.m + ' 机位 · 走向示意</span>'
+      + '<br><a href="maps/' + r.page + '" style="color:#1f5fa8">进入公路专题 →</a>', { maxWidth:240 });
+  pl.addTo(roadLayer);
+  var mid = r.route[Math.floor(r.route.length / 2)];
+  L.tooltip({ permanent:true, direction:'center', className:'rlabel' })
+    .setLatLng(mid).setContent(r.name).addTo(roadLabelLayer);
+});
+document.getElementById('am-roadn').textContent = (ROADS || []).length;
+function amRoadSync() {
+  var on = document.getElementById('am-road').checked;
+  if (on) roadLayer.addTo(am); else am.removeLayer(roadLayer);
+  var lb = on && am.getZoom() <= 8;
+  if (lb) roadLabelLayer.addTo(am); else am.removeLayer(roadLabelLayer);
+}
+document.getElementById('am-road').onchange = amRoadSync;
+am.on('zoomend', amRoadSync);
+amRoadSync();
 </script>
 <script>
 /* ---------- 当季看板数据（按月） ---------- */
