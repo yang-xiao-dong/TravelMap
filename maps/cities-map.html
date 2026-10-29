@@ -55,7 +55,7 @@ aside{overflow-y:auto;border-right:1px solid var(--line);background:#fff;padding
     <a class="back" href="../index.html">返回首页</a>
   </header>
   <aside>
-    <div class="intro">城市专题以<b>城市建成区与近郊</b>为单位组织机位：天际线、古城街区、江河夜色、市井烟火与周边一小时圈。31 省 <b>92 城</b>分批上线，省会与副省级城市优先，已上线城市点击直达。</div>
+    <div class="intro">城市专题以<b>城市建成区与近郊</b>为单位组织机位：天际线、古城街区、江河夜色、市井烟火与周边一小时圈。31 省 <b>92 城</b>已全量上线——643 景区 1347 机位，点击城市直达专题。</div>
     <div class="legend">
       <span style="color:#c2255c">★ 省会/首府（直辖市同）</span>　<span style="color:#6741d9">◆ 副省级市</span>　<span style="color:#1c7ed6">● 地级选点</span>　<span style="color:#adb5bd">○ 规划中</span>
     </div>
@@ -67,7 +67,7 @@ aside{overflow-y:auto;border-right:1px solid var(--line);background:#fff;padding
 </div>
 
 <script src="../lib/leaflet.js"></script>
-<script src="../data/cities.js?v=1"></script>
+<script src="../data/cities.js?v=2"></script>
 <script>
 var map = L.map('map', { zoomControl:true, minZoom:4, maxZoom:12 }).setView([35.5, 105], 4);
 var sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',

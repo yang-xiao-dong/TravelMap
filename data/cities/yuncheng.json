@@ -2,6 +2,7 @@
   "pinyin": "city-yuncheng",
   "title": "运城 · 城市采风",
   "h1": "运城 · 城市采风",
+  "em": "关公故里 · 盐湖",
   "accent": "#2f9e44",
   "subhead": "城市机位 → 景区 → 街区 三级结构 · %(n)d 景区 %(m)d 机位",
   "center": [
@@ -23,7 +24,6 @@
   "route_name": "运城",
   "region_order": [
     "盐湖片区",
-    "运城市区",
     "永济方向",
     "芮城方向"
   ],
